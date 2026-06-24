@@ -1,0 +1,2943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Productivity Planner</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://apis.google.com/js/api.js" async defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fff8f2;
+    --card: #ffffff;
+    --text: #3d2e1f;
+    --text-light: #8a7260;
+    --accent-primary: #e8720c;
+    --accent-dark: #c45e08;
+    --accent-light: #f59e42;
+    --cat-learning: #e8720c;
+    --cat-design: #d94f8a;
+    --cat-coding: #2e86de;
+    --cat-baby: #27ae60;
+    --cat-personal: #f0b429;
+    --cat-break: #8854d0;
+    --shadow: 0 2px 12px rgba(232, 114, 12, 0.08);
+    --shadow-lg: 0 8px 30px rgba(232, 114, 12, 0.12);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  .app-header {
+    background: #e8720c;
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(232, 114, 12, 0.3);
+  }
+
+  .app-header h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    color: white;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  .header-date {
+    color: rgba(255,255,255,0.9);
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .nav-tabs {
+    display: flex;
+    gap: 4px;
+    background: rgba(255,255,255,0.15);
+    padding: 4px;
+    border-radius: 12px;
+  }
+
+  .nav-tab {
+    padding: 8px 20px;
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.7);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s;
+  }
+
+  .nav-tab:hover { color: white; background: rgba(255,255,255,0.1); }
+  .nav-tab.active { background: white; color: #e8720c; }
+
+  .main-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+
+  /* Quote Banner */
+  .quote-banner {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 20px 28px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+    border-left: 4px solid #e8720c;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .quote-banner::after {
+    content: '"';
+    position: absolute;
+    right: 20px;
+    top: -10px;
+    font-size: 100px;
+    color: rgba(232, 114, 12, 0.06);
+    font-family: Georgia, serif;
+  }
+
+  .quote-text {
+    font-size: 1rem;
+    font-style: italic;
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  .quote-author {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-top: 8px;
+    font-weight: 600;
+  }
+
+  /* Weekly Planner */
+  .week-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .week-nav {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .week-nav button {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid var(--accent-primary);
+    background: white;
+    color: var(--accent-primary);
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .week-nav button:hover {
+    background: var(--accent-primary);
+    color: white;
+  }
+
+  .week-nav span {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    min-width: 200px;
+    text-align: center;
+  }
+
+  .week-grid {
+    display: grid;
+    gap: 2px;
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .week-grid.view-week { grid-template-columns: 70px repeat(7, 1fr); }
+
+  /* Today View */
+  .today-view {
+    max-width: 520px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .today-greeting {
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  .today-greeting h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .today-greeting p {
+    font-size: 1rem;
+    color: var(--text-light);
+  }
+
+  .today-block {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 2px solid transparent;
+  }
+
+  .today-block:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .today-block-dot {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+  }
+
+  .today-block-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .today-block-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+
+  .today-block-time {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    font-weight: 500;
+  }
+
+  .today-block-cat {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .today-empty {
+    text-align: center;
+    padding: 48px 24px;
+    background: var(--card);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+  }
+
+  .today-empty p {
+    font-size: 1.1rem;
+    color: var(--text-light);
+    margin-bottom: 16px;
+  }
+
+  .today-add-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 28px;
+    border-radius: 50px;
+    border: none;
+    background: #e8720c;
+    color: white;
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 15px rgba(232, 114, 12, 0.3);
+  }
+
+  .today-add-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(232, 114, 12, 0.4);
+  }
+
+  .dot-learning { background: #e8720c; }
+  .dot-design { background: #d94f8a; }
+  .dot-coding { background: #2e86de; }
+  .dot-baby { background: #27ae60; }
+  .dot-personal { background: #f0b429; }
+  .dot-break { background: #8854d0; }
+
+  .badge-learning { background: rgba(232, 114, 12, 0.12); color: #c45e08; }
+  .badge-design { background: rgba(217, 79, 138, 0.12); color: #b84072; }
+  .badge-coding { background: rgba(46, 134, 222, 0.12); color: #2472bf; }
+  .badge-baby { background: rgba(39, 174, 96, 0.12); color: #1e8c4d; }
+  .badge-personal { background: rgba(240, 180, 41, 0.12); color: #b48a10; }
+  .badge-break { background: rgba(136, 84, 208, 0.12); color: #6f42b5; }
+
+  .time-label {
+    padding: 8px 6px;
+    font-size: 0.7rem;
+    color: var(--text-light);
+    text-align: right;
+    font-weight: 500;
+    border-bottom: 1px solid #f5e6d6;
+    height: 48px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+  }
+
+  .day-header {
+    padding: 12px 8px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-light);
+    background: #fef6ee;
+    border-bottom: 2px solid #f5e6d6;
+  }
+
+  .day-header.today {
+    color: var(--accent-primary);
+    background: rgba(232, 114, 12, 0.06);
+    border-bottom-color: var(--accent-primary);
+  }
+
+  .day-header .date-num {
+    display: block;
+    font-size: 1.2rem;
+    font-family: 'Space Grotesk', sans-serif;
+    color: var(--text);
+    margin-top: 2px;
+  }
+
+  .day-header.today .date-num {
+    background: var(--accent-primary);
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .time-slot {
+    height: 48px;
+    border-bottom: 1px solid #f5e6d6;
+    border-left: 1px solid #f5e6d6;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .time-slot:hover { background: rgba(232, 114, 12, 0.03); }
+
+  .time-block {
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    z-index: 2;
+    overflow: hidden;
+    transition: transform 0.15s, box-shadow 0.15s;
+    line-height: 1.3;
+  }
+
+  .time-block:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+
+  .time-block .block-title { display: block; }
+  .time-block .block-time {
+    font-size: 0.65rem;
+    font-weight: 400;
+    opacity: 0.8;
+  }
+
+  .cat-learning { background: #e8720c; color: #ffffff; border-left: 3px solid #c45e08; }
+  .cat-design { background: #d94f8a; color: #ffffff; border-left: 3px solid #b84072; }
+  .cat-coding { background: #2e86de; color: #ffffff; border-left: 3px solid #2472bf; }
+  .cat-baby { background: #27ae60; color: #ffffff; border-left: 3px solid #1e8c4d; }
+  .cat-personal { background: #f0b429; color: #3d2e1f; border-left: 3px solid #d49b1a; }
+  .cat-break { background: #8854d0; color: #ffffff; border-left: 3px solid #6f42b5; }
+
+  .corner-header {
+    background: #fef6ee;
+    border-bottom: 2px solid #f5e6d6;
+  }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(45, 43, 66, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .modal {
+    background: white;
+    border-radius: var(--radius);
+    padding: 28px;
+    width: 420px;
+    max-width: 90vw;
+    box-shadow: var(--shadow-lg);
+    animation: slideUp 0.25s;
+  }
+
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  .modal h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+    color: var(--text);
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-light);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .form-group input, .form-group select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid #eedcc8;
+    border-radius: var(--radius-sm);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+
+  .form-group input:focus, .form-group select:focus {
+    border-color: var(--accent-primary);
+  }
+
+  .form-row {
+    display: flex;
+    gap: 12px;
+  }
+
+  .form-row .form-group { flex: 1; }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 24px;
+  }
+
+  .btn {
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: var(--accent-primary);
+    color: white;
+  }
+
+  .btn-primary:hover { background: #c45e08; }
+
+  .btn-secondary {
+    background: #f5e6d6;
+    color: var(--text);
+  }
+
+  .btn-secondary:hover { background: #e6d2b8; }
+
+  .btn-today-active {
+    background: #e8720c;
+    color: white;
+  }
+
+  .btn-today-active:hover { background: #c45e08; }
+
+  .btn-danger {
+    background: #fee2e2;
+    color: #dc2626;
+  }
+
+  .btn-danger:hover { background: #fecaca; }
+
+  /* Select mode */
+  .select-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff3e6;
+    border: 2px solid var(--accent-primary);
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .select-bar .select-count {
+    font-weight: 600;
+    color: var(--accent-dark);
+    font-size: 0.85rem;
+    margin-right: auto;
+  }
+  .select-bar button {
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: none;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-select-all { background: var(--accent-primary); color: white; }
+  .btn-select-all:hover { background: var(--accent-dark); }
+  .btn-select-cancel { background: #f5e6d6; color: var(--text); }
+  .btn-select-cancel:hover { background: #e6d2b8; }
+  .btn-select-delete { background: #dc2626; color: white; }
+  .btn-select-delete:hover { background: #b91c1c; }
+  .btn-select-mode {
+    padding: 8px 16px;
+    border-radius: 10px;
+    border: 2px solid var(--accent-primary);
+    background: white;
+    color: var(--accent-primary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-select-mode:hover { background: var(--accent-primary); color: white; }
+  .btn-select-mode.active { background: var(--accent-primary); color: white; }
+
+  .time-block.selected {
+    outline: 3px solid #dc2626;
+    outline-offset: -1px;
+    opacity: 0.85;
+  }
+  .time-block .select-check {
+    position: absolute;
+    top: 2px;
+    right: 4px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.8);
+    background: rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: white;
+  }
+  .time-block.selected .select-check {
+    background: #dc2626;
+    border-color: white;
+  }
+
+  .today-block.selected {
+    outline: 3px solid #dc2626;
+    outline-offset: -1px;
+    opacity: 0.85;
+  }
+  .today-block .select-check {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid #ddd;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: white;
+    flex-shrink: 0;
+  }
+  .today-block.selected .select-check {
+    background: #dc2626;
+    border-color: #dc2626;
+  }
+
+  /* Roadmap */
+  .roadmap-container {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  .roadmap-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .roadmap-header h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  .roadmap-overall {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    box-shadow: var(--shadow);
+    margin-bottom: 28px;
+  }
+
+  .roadmap-overall-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .roadmap-overall-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .roadmap-overall-pct {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #e8720c;
+  }
+
+  .roadmap-bar-bg {
+    width: 100%;
+    height: 10px;
+    background: #f5e6d6;
+    border-radius: 5px;
+    overflow: hidden;
+  }
+
+  .roadmap-bar-fill {
+    height: 100%;
+    border-radius: 5px;
+    background: #e8720c;
+    transition: width 0.5s ease;
+  }
+
+  .roadmap-timeline {
+    position: relative;
+    padding-left: 32px;
+  }
+
+  .roadmap-timeline::before {
+    content: '';
+    position: absolute;
+    left: 11px;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: #f5e6d6;
+    border-radius: 2px;
+  }
+
+  .roadmap-milestone {
+    position: relative;
+    margin-bottom: 16px;
+  }
+
+  .roadmap-dot {
+    position: absolute;
+    left: -32px;
+    top: 18px;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background: #f5e6d6;
+    border: 3px solid #fff8f2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    color: white;
+    z-index: 2;
+    transition: all 0.3s;
+  }
+
+  .roadmap-dot.done { background: #27ae60; }
+  .roadmap-dot.active { background: #e8720c; box-shadow: 0 0 0 4px rgba(232, 114, 12, 0.2); }
+
+  .milestone-card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 18px 22px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+  }
+
+  .milestone-card:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .milestone-card.done {
+    opacity: 0.7;
+    border-color: #27ae60;
+  }
+
+  .milestone-card.active-ms {
+    border-color: #e8720c;
+  }
+
+  .milestone-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+
+  .milestone-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .milestone-title.done-text {
+    text-decoration: line-through;
+    color: var(--text-light);
+  }
+
+  .milestone-actions {
+    display: flex;
+    gap: 6px;
+  }
+
+  .milestone-actions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 2px 4px;
+    color: #d4c0a8;
+    transition: color 0.2s;
+  }
+
+  .milestone-actions button:hover { color: var(--text); }
+  .milestone-actions .del-btn:hover { color: #dc2626; }
+
+  .milestone-steps {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .step-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+  }
+
+  .step-check {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    border: 2px solid #d4c0a8;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    background: white;
+    font-size: 0.7rem;
+  }
+
+  .step-check.checked {
+    background: #27ae60;
+    border-color: #27ae60;
+    color: white;
+  }
+
+  .step-text {
+    font-size: 0.9rem;
+    color: var(--text);
+  }
+
+  .step-text.done-step {
+    text-decoration: line-through;
+    color: var(--text-light);
+  }
+
+  .step-delete {
+    background: none;
+    border: none;
+    color: #d4c0a8;
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 2px;
+    margin-left: auto;
+    transition: color 0.2s;
+  }
+
+  .step-delete:hover { color: #dc2626; }
+
+  .add-step-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .add-step-row input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 2px solid #eedcc8;
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    outline: none;
+  }
+
+  .add-step-row input:focus { border-color: var(--accent-primary); }
+
+  .add-step-row button {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: none;
+    background: var(--accent-primary);
+    color: white;
+    font-size: 1.1rem;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .add-milestone-card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 18px 22px;
+    box-shadow: var(--shadow);
+    border: 2px dashed #eedcc8;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+
+  .add-milestone-card:hover {
+    border-color: #e8720c;
+    background: #fff8f2;
+  }
+
+  .add-milestone-form {
+    display: flex;
+    gap: 8px;
+  }
+
+  .add-milestone-form input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 2px solid #eedcc8;
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    outline: none;
+  }
+
+  .add-milestone-form input:focus { border-color: var(--accent-primary); }
+
+  /* Ideas Board */
+  .ideas-board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    align-items: start;
+  }
+
+  .ideas-column {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    min-height: 300px;
+  }
+
+  .ideas-col-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #f5e6d6;
+  }
+
+  .ideas-col-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  .ideas-col-icon.col-ideas { background: #e8720c; }
+  .ideas-col-icon.col-design { background: #d94f8a; }
+  .ideas-col-icon.col-functions { background: #2e86de; }
+
+  .ideas-col-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .ideas-col-count {
+    margin-left: auto;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-light);
+    background: #f5e6d6;
+    padding: 2px 10px;
+    border-radius: 20px;
+  }
+
+  .idea-card {
+    background: #fff8f2;
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+  }
+
+  .idea-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    border-color: #eedcc8;
+  }
+
+  .idea-card-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .idea-card-notes {
+    font-size: 0.82rem;
+    color: var(--text-light);
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .idea-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-top: 8px;
+    gap: 4px;
+  }
+
+  .idea-card-footer button {
+    background: none;
+    border: none;
+    color: #d4c0a8;
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 2px 6px;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+
+  .idea-card-footer button:hover { color: var(--text); background: #f5e6d6; }
+  .idea-card-footer .idea-del:hover { color: #dc2626; background: #fee2e2; }
+
+  .idea-add-btn {
+    width: 100%;
+    padding: 14px;
+    border: 2px dashed #eedcc8;
+    border-radius: 14px;
+    background: transparent;
+    color: var(--text-light);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 4px;
+    -webkit-tap-highlight-color: rgba(232, 114, 12, 0.1);
+    touch-action: manipulation;
+  }
+
+  .idea-add-btn:hover {
+    border-color: #e8720c;
+    color: #e8720c;
+    background: rgba(232, 114, 12, 0.03);
+  }
+
+  /* Idea Modal */
+  .idea-form-group {
+    margin-bottom: 14px;
+  }
+
+  .idea-form-group label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-light);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .idea-form-group input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid #eedcc8;
+    border-radius: var(--radius-sm);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    outline: none;
+  }
+
+  .idea-form-group input:focus { border-color: var(--accent-primary); }
+
+  .idea-form-group textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid #eedcc8;
+    border-radius: var(--radius-sm);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    outline: none;
+    resize: vertical;
+    min-height: 80px;
+    line-height: 1.5;
+  }
+
+  .idea-form-group textarea:focus { border-color: var(--accent-primary); }
+
+  .move-btn-group {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .move-btn {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 2px solid #eedcc8;
+    background: white;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-light);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .move-btn:hover { border-color: #e8720c; color: #e8720c; }
+  .move-btn.active-col { background: #e8720c; color: white; border-color: #e8720c; }
+
+  @media (max-width: 900px) {
+    .ideas-board { grid-template-columns: 1fr; }
+  }
+
+  /* Pomodoro */
+  .pomodoro-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+  }
+
+  .pomo-card {
+    background: var(--card);
+    border-radius: 24px;
+    padding: 48px 60px;
+    box-shadow: var(--shadow-lg);
+    text-align: center;
+    max-width: 460px;
+    width: 100%;
+  }
+
+  .pomo-mode-tabs {
+    display: flex;
+    gap: 4px;
+    background: #f5e6d6;
+    padding: 4px;
+    border-radius: 12px;
+    margin-bottom: 36px;
+  }
+
+  .pomo-mode-tab {
+    flex: 1;
+    padding: 8px 16px;
+    border: none;
+    background: transparent;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-light);
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s;
+  }
+
+  .pomo-mode-tab.active {
+    background: white;
+    color: var(--accent-primary);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+
+  .pomo-timer {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 5rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 20px 0;
+    letter-spacing: -2px;
+  }
+
+  .pomo-label {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    margin-bottom: 32px;
+    font-weight: 500;
+  }
+
+  .pomo-controls {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+  }
+
+  .pomo-btn {
+    padding: 14px 36px;
+    border-radius: 50px;
+    border: none;
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .pomo-btn-start {
+    background: #e8720c;
+    color: white;
+    box-shadow: 0 4px 15px rgba(232, 114, 12, 0.3);
+  }
+
+  .pomo-btn-start:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(232, 114, 12, 0.4);
+  }
+
+  .pomo-btn-reset {
+    background: #f5e6d6;
+    color: var(--text);
+  }
+
+  .pomo-btn-reset:hover { background: #e6d2b8; }
+
+  .pomo-sessions {
+    margin-top: 32px;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .pomo-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #eedcc8;
+    transition: background 0.3s;
+  }
+
+  .pomo-dot.done {
+    background: #27ae60;
+  }
+
+  .pomo-stats {
+    margin-top: 40px;
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+    max-width: 460px;
+    width: 100%;
+  }
+
+  .pomo-stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 0.85rem;
+  }
+
+  .pomo-stat-label { color: var(--text-light); }
+  .pomo-stat-value { font-weight: 700; color: var(--text); }
+
+  /* Google Calendar */
+  .gcal-signin-bar {
+    background: var(--card);
+    border-radius: 50px;
+    padding: 6px 16px;
+    margin-bottom: 12px;
+    box-shadow: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid #f0e0d0;
+    max-width: 420px;
+  }
+
+  .gcal-signin-bar span {
+    font-size: 0.75rem;
+    color: var(--text-light);
+  }
+
+  .gcal-signin-btn {
+    padding: 5px 12px;
+    border-radius: 50px;
+    border: 1.5px solid #4285f4;
+    background: white;
+    color: #4285f4;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .gcal-signin-btn:hover { background: #4285f4; color: white; }
+
+  .gcal-signout-btn {
+    padding: 4px 10px;
+    border-radius: 50px;
+    border: none;
+    background: #f5e6d6;
+    color: var(--text-light);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .gcal-signout-btn:hover { background: #e6d2b8; }
+
+  .gcal-events-strip {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 4px 3px;
+    border-bottom: 2px solid #f5e6d6;
+    background: rgba(66, 133, 244, 0.03);
+    min-height: 0;
+  }
+
+  .gcal-event {
+    background: rgba(66, 133, 244, 0.1);
+    border-left: 3px solid #4285f4;
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 0.65rem;
+    color: #1a56c4;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.4;
+  }
+
+  .gcal-event.gcal-task {
+    background: rgba(52, 168, 83, 0.1);
+    border-left-color: #34a853;
+    color: #1e7e34;
+  }
+
+  .gcal-event-time {
+    font-weight: 400;
+    opacity: 0.7;
+    font-size: 0.6rem;
+  }
+
+  /* Today view Google events */
+  .today-gcal-section {
+    margin-bottom: 8px;
+  }
+
+  .today-gcal-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #4285f4;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .today-gcal-item {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 12px 18px;
+    margin-bottom: 8px;
+    border-left: 4px solid #4285f4;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .today-gcal-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4285f4;
+    flex-shrink: 0;
+  }
+
+  .today-gcal-info {
+    flex: 1;
+  }
+
+  .today-gcal-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .today-gcal-time {
+    font-size: 0.8rem;
+    color: #4285f4;
+    font-weight: 500;
+  }
+
+  /* Settings */
+  .settings-container {
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  .settings-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 28px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+  }
+
+  .settings-card h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .settings-card p {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  .settings-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .settings-btn {
+    padding: 10px 22px;
+    border-radius: 50px;
+    border: none;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .settings-btn-export {
+    background: #e8720c;
+    color: white;
+    box-shadow: 0 3px 10px rgba(232, 114, 12, 0.2);
+  }
+
+  .settings-btn-export:hover { background: #c45e08; }
+
+  .settings-btn-import {
+    background: #f5e6d6;
+    color: var(--text);
+  }
+
+  .settings-btn-import:hover { background: #e6d2b8; }
+
+  .settings-success {
+    margin-top: 12px;
+    padding: 10px 16px;
+    background: rgba(39, 174, 96, 0.1);
+    color: #1e8c4d;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .settings-error {
+    margin-top: 12px;
+    padding: 10px 16px;
+    background: #fee2e2;
+    color: #dc2626;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .settings-gear {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.2);
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .settings-gear:hover { background: rgba(255,255,255,0.35); }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .week-grid { overflow-x: auto; }
+  }
+
+  /* Touch-friendly taps */
+  button, .idea-card, .nav-tab, .milestone-card, .today-card {
+    -webkit-tap-highlight-color: rgba(232, 114, 12, 0.1);
+    touch-action: manipulation;
+  }
+
+  @media (max-width: 768px) {
+    .app-header {
+      padding: 12px 16px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .app-header h1 { font-size: 1.1rem; }
+    .header-date { display: none; }
+    .nav-tabs {
+      order: 3;
+      width: 100%;
+      justify-content: center;
+    }
+    .nav-tab {
+      padding: 6px 14px;
+      font-size: 0.78rem;
+    }
+    .main-content { padding: 12px; }
+    .quote-banner {
+      padding: 14px 16px;
+      margin-bottom: 16px;
+    }
+    .quote-text { font-size: 0.88rem; }
+    .quote-banner::after { display: none; }
+
+    /* Week view — scroll horizontally */
+    .week-grid {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .week-grid.view-week {
+      grid-template-columns: 50px repeat(7, 120px);
+      min-width: 0;
+    }
+    .week-header { flex-wrap: wrap; gap: 8px; }
+    .week-nav span { font-size: 0.9rem; min-width: 160px; }
+
+    /* Today view */
+    .today-view { max-width: 100%; padding: 0; }
+    .today-card {
+      padding: 14px 16px;
+      margin-bottom: 10px;
+    }
+
+    /* Roadmap */
+    .roadmap-container { padding: 16px 0; }
+    .milestone-card { padding: 16px; }
+
+    /* Ideas */
+    .ideas-board { grid-template-columns: 1fr !important; }
+
+    /* Pomodoro */
+    .pomo-card { padding: 28px 18px; }
+    .pomo-timer { font-size: 3rem; }
+    .pomo-mode-tabs { flex-wrap: wrap; }
+
+    /* Settings */
+    .settings-container { padding: 16px 0; }
+    .settings-card { padding: 20px 16px; }
+
+    /* GCal bar */
+    .gcal-signin-bar {
+      max-width: 100%;
+      padding: 6px 12px;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    /* Modals */
+    .modal-overlay .modal-content,
+    .block-modal {
+      width: 95vw !important;
+      max-width: 95vw !important;
+      margin: 10px;
+      padding: 20px 16px !important;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .app-header h1 { font-size: 0.95rem; }
+    .nav-tab {
+      padding: 5px 10px;
+      font-size: 0.72rem;
+    }
+    .main-content { padding: 8px; }
+    .week-grid.view-week {
+      grid-template-columns: 42px repeat(7, 100px);
+    }
+    .pomo-timer { font-size: 2.6rem; }
+    .pomo-card { padding: 24px 14px; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ===== FIREBASE =====
+const firebaseConfig = {
+  apiKey: "AIzaSyBI8_GwQlWQnKCsAckdbrY8I7RFrp6EkcM",
+  authDomain: "productivity-planner-3d5cf.firebaseapp.com",
+  projectId: "productivity-planner-3d5cf",
+  storageBucket: "productivity-planner-3d5cf.firebasestorage.app",
+  messagingSenderId: "510915111603",
+  appId: "1:510915111603:web:952d965ac20e4be63ddec6"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+// Firestore sync helpers
+function useFirestoreDoc(collectionName, docId, defaultVal) {
+  const [data, setData] = useState(defaultVal);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!docId) return;
+    const unsub = db.collection(collectionName).doc(docId).onSnapshot(snap => {
+      if (snap.exists) {
+        setData(snap.data().value || defaultVal);
+      }
+      setLoaded(true);
+    });
+    return unsub;
+  }, [collectionName, docId]);
+
+  const save = useCallback((newVal) => {
+    if (!docId) return;
+    if (typeof newVal === 'function') {
+      setData(prev => {
+        const resolved = newVal(prev);
+        db.collection(collectionName).doc(docId).set({ value: resolved }, { merge: true });
+        return resolved;
+      });
+    } else {
+      setData(newVal);
+      db.collection(collectionName).doc(docId).set({ value: newVal }, { merge: true });
+    }
+  }, [collectionName, docId]);
+
+  return [data, save, loaded];
+}
+
+function useAuth() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Handle redirect result (for mobile sign-in)
+    auth.getRedirectResult().catch(() => {});
+    const unsub = auth.onAuthStateChanged(u => {
+      setUser(u);
+      setLoading(false);
+    });
+    return unsub;
+  }, []);
+
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const signIn = () => {
+    if (isMobile) {
+      return auth.signInWithRedirect(googleProvider);
+    }
+    return auth.signInWithPopup(googleProvider);
+  };
+  const signOut = () => auth.signOut();
+
+  return { user, loading, signIn, signOut };
+}
+
+// Shared household ID — all authorized users share data under this key
+function getHouseholdId(user) {
+  // Use a stable ID derived from the Firebase project — all signed-in users share the same data
+  return 'household_shared';
+}
+
+// ===== DATA =====
+const QUOTES = [
+  { text: "The only way to learn a new programming language is by writing programs in it.", author: "Dennis Ritchie" },
+  { text: "First, solve the problem. Then, write the code.", author: "John Johnson" },
+  { text: "The best error message is the one that never shows up.", author: "Thomas Fuchs" },
+  { text: "It's not a bug — it's an undocumented feature.", author: "Anonymous" },
+  { text: "Code is like humor. When you have to explain it, it's bad.", author: "Cory House" },
+  { text: "Simplicity is the soul of efficiency.", author: "Austin Freeman" },
+  { text: "Make it work, make it right, make it fast.", author: "Kent Beck" },
+  { text: "The most disastrous thing that you can ever learn is your first programming language.", author: "Alan Kay" },
+  { text: "Every great developer you know got there by solving problems they were unqualified to solve until they actually did it.", author: "Patrick McKenzie" },
+  { text: "Don't worry if it doesn't work right. If everything did, you'd be out of a job.", author: "Mosher's Law" },
+  { text: "Sometimes it pays to stay in bed on Monday, rather than spending the rest of the week debugging Monday's code.", author: "Dan Salomon" },
+  { text: "Debugging is twice as hard as writing the code in the first place.", author: "Brian Kernighan" },
+  { text: "You don't have to be great to start, but you have to start to be great.", author: "Zig Ziglar" },
+  { text: "The expert in anything was once a beginner.", author: "Helen Hayes" },
+  { text: "A year from now you'll wish you had started today.", author: "Karen Lamb" },
+  { text: "Small daily improvements over time lead to stunning results.", author: "Robin Sharma" },
+  { text: "Progress, not perfection, is what we should be asking of ourselves.", author: "Julia Cameron" },
+  { text: "You are never too old to set another goal or to dream a new dream.", author: "C.S. Lewis" },
+  { text: "The secret of getting ahead is getting started.", author: "Mark Twain" },
+  { text: "Believe you can and you're halfway there.", author: "Theodore Roosevelt" },
+  { text: "It does not matter how slowly you go as long as you do not stop.", author: "Confucius" },
+  { text: "One day or day one. You decide.", author: "Paulo Coelho" },
+  { text: "Talk is cheap. Show me the code.", author: "Linus Torvalds" },
+  { text: "Any fool can write code that a computer can understand. Good programmers write code that humans can understand.", author: "Martin Fowler" },
+  { text: "The best time to plant a tree was 20 years ago. The second best time is now.", author: "Chinese Proverb" },
+  { text: "Done is better than perfect.", author: "Sheryl Sandberg" },
+  { text: "Start where you are. Use what you have. Do what you can.", author: "Arthur Ashe" },
+  { text: "Learning to code is useful no matter what your career ambitions are.", author: "Arianna Huffington" },
+  { text: "Your limitation — it's only your imagination.", author: "Unknown" },
+  { text: "Great things never come from comfort zones.", author: "Unknown" },
+  { text: "Hardships often prepare ordinary people for an extraordinary destiny.", author: "C.S. Lewis" },
+];
+
+const CATEGORIES = [
+  { id: 'learning', name: 'Flutter/Dart Learning', color: 'cat-learning', emoji: '📚' },
+  { id: 'design', name: 'App Design', color: 'cat-design', emoji: '🎨' },
+  { id: 'coding', name: 'Coding', color: 'cat-coding', emoji: '💻' },
+  { id: 'baby', name: 'Baby / Family', color: 'cat-baby', emoji: '👶' },
+  { id: 'personal', name: 'Personal / Self-care', color: 'cat-personal', emoji: '✨' },
+  { id: 'break', name: 'Break', color: 'cat-break', emoji: '☕' },
+];
+
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const HOURS = Array.from({ length: 16 }, (_, i) => i + 6); // 6:00 to 21:00
+
+function getWeekDates(offset = 0) {
+  const now = new Date();
+  const day = now.getDay();
+  const mondayOffset = day === 0 ? -6 : 1 - day;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() + mondayOffset + offset * 7);
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    return d;
+  });
+}
+
+function formatWeekRange(dates) {
+  const opts = { month: 'short', day: 'numeric' };
+  return `${dates[0].toLocaleDateString('en-US', opts)} — ${dates[6].toLocaleDateString('en-US', opts)}, ${dates[0].getFullYear()}`;
+}
+
+function isToday(date) {
+  const now = new Date();
+  return date.getDate() === now.getDate() && date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+}
+
+function dateKey(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function getRandomQuote() {
+  return QUOTES[Math.floor(Math.random() * QUOTES.length)];
+}
+
+// Persistence helpers
+function loadData(key, fallback) {
+  try {
+    const v = JSON.parse(localStorage.getItem(key));
+    return v != null ? v : fallback;
+  } catch { return fallback; }
+}
+
+function saveData(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+// ===== GOOGLE CALENDAR =====
+const GCAL_CLIENT_ID = '565625946716-7fmhd4eq943i2to4tce83go3vdgjscmr.apps.googleusercontent.com';
+const GCAL_SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
+
+function useGoogleCalendar() {
+  const [signedIn, setSignedIn] = useState(false);
+  const [events, setEvents] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState('');
+  const tokenClientRef = useRef(null);
+  const accessTokenRef = useRef(null);
+
+  const initGapi = useCallback(() => {
+    return new Promise((resolve, reject) => {
+      if (window.gapi && window.gapi.client) { resolve(); return; }
+      const check = setInterval(() => {
+        if (window.gapi) {
+          clearInterval(check);
+          window.gapi.load('client', async () => {
+            try {
+              await window.gapi.client.init({});
+              await window.gapi.client.load('https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest');
+              await window.gapi.client.load('https://www.googleapis.com/discovery/v1/apis/tasks/v1/rest');
+              resolve();
+            } catch (err) {
+              reject(err);
+            }
+          });
+        }
+      }, 100);
+      setTimeout(() => { clearInterval(check); reject('Timeout loading Google API'); }, 10000);
+    });
+  }, []);
+
+  const fetchEvents = useCallback(async (startDate, endDate) => {
+    if (!accessTokenRef.current) return;
+    setLoading(true);
+    setStatus('Loading events...');
+    const grouped = {};
+    try {
+      // Fetch calendar events
+      const response = await window.gapi.client.calendar.events.list({
+        calendarId: 'primary',
+        timeMin: startDate.toISOString(),
+        timeMax: endDate.toISOString(),
+        singleEvents: true,
+        orderBy: 'startTime',
+        maxResults: 100,
+      });
+      const items = response.result.items || [];
+      items.forEach(ev => {
+        const start = ev.start.dateTime || ev.start.date;
+        const dk = start.split('T')[0];
+        if (!grouped[dk]) grouped[dk] = [];
+        const startTime = ev.start.dateTime ? new Date(ev.start.dateTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : 'All day';
+        const endTime = ev.end.dateTime ? new Date(ev.end.dateTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '';
+        grouped[dk].push({ id: ev.id, title: ev.summary || '(No title)', startTime, endTime, allDay: !ev.start.dateTime, type: 'event' });
+      });
+      setStatus(`Found ${items.length} event${items.length !== 1 ? 's' : ''}`);
+    } catch (err) {
+      console.error('Calendar fetch error:', err);
+      setStatus('Error loading events');
+    }
+
+    // Fetch Google Tasks
+    try {
+      const taskLists = await window.gapi.client.tasks.tasklists.list({ maxResults: 10 });
+      const lists = taskLists.result.items || [];
+      let taskCount = 0;
+      for (const list of lists) {
+        try {
+          const tasksResp = await window.gapi.client.tasks.tasks.list({
+            tasklist: list.id,
+            dueMin: startDate.toISOString(),
+            dueMax: endDate.toISOString(),
+            showCompleted: false,
+            maxResults: 50,
+          });
+          const tasks = tasksResp.result.items || [];
+          tasks.forEach(t => {
+            if (t.due) {
+              const dk = t.due.split('T')[0];
+              if (!grouped[dk]) grouped[dk] = [];
+              grouped[dk].push({ id: t.id, title: t.title || '(No title)', startTime: 'Task', endTime: '', allDay: true, type: 'task' });
+              taskCount++;
+            }
+          });
+        } catch (e) { /* skip inaccessible lists */ }
+      }
+      setStatus(prev => prev + `, ${taskCount} task${taskCount !== 1 ? 's' : ''}`);
+    } catch (err) {
+      console.error('Tasks fetch error:', err);
+    }
+
+    setEvents(grouped);
+    setLoading(false);
+  }, []);
+
+  const signIn = useCallback(async () => {
+    setStatus('Connecting...');
+    try {
+      await initGapi();
+    } catch (err) {
+      setStatus('Failed to load Google API');
+      return;
+    }
+    if (!tokenClientRef.current && window.google) {
+      tokenClientRef.current = window.google.accounts.oauth2.initTokenClient({
+        client_id: GCAL_CLIENT_ID,
+        scope: GCAL_SCOPES + ' https://www.googleapis.com/auth/tasks.readonly',
+        callback: (tokenResponse) => {
+          if (tokenResponse.access_token) {
+            accessTokenRef.current = tokenResponse.access_token;
+            window.gapi.client.setToken({ access_token: tokenResponse.access_token });
+            localStorage.setItem('gcal_token', tokenResponse.access_token);
+            localStorage.setItem('gcal_token_time', Date.now().toString());
+            setSignedIn(true);
+            setStatus('Connected!');
+          } else {
+            setStatus('Sign-in failed');
+          }
+        },
+      });
+    }
+    tokenClientRef.current?.requestAccessToken();
+  }, [initGapi]);
+
+  const signOut = useCallback(() => {
+    if (accessTokenRef.current && window.google) {
+      window.google.accounts.oauth2.revoke(accessTokenRef.current);
+    }
+    accessTokenRef.current = null;
+    window.gapi?.client?.setToken(null);
+    localStorage.removeItem('gcal_token');
+    localStorage.removeItem('gcal_token_time');
+    setSignedIn(false);
+    setEvents({});
+    setStatus('');
+  }, []);
+
+  // Auto-reconnect from saved token on page load
+  useEffect(() => {
+    const savedToken = localStorage.getItem('gcal_token');
+    const savedTime = localStorage.getItem('gcal_token_time');
+    if (savedToken && savedTime) {
+      const age = Date.now() - parseInt(savedTime);
+      if (age < 3500000) { // token valid ~1 hour, reconnect if < 58 min old
+        initGapi().then(() => {
+          accessTokenRef.current = savedToken;
+          window.gapi.client.setToken({ access_token: savedToken });
+          setSignedIn(true);
+          setStatus('Connected!');
+        }).catch(() => {});
+      } else {
+        localStorage.removeItem('gcal_token');
+        localStorage.removeItem('gcal_token_time');
+      }
+    }
+  }, [initGapi]);
+
+  return { signedIn, events, loading, status, signIn, signOut, fetchEvents };
+}
+
+// ===== COMPONENTS =====
+
+function QuoteBanner() {
+  const [q] = useState(() => getRandomQuote());
+  return (
+    <div className="quote-banner">
+      <div className="quote-text">{q.text}</div>
+      <div className="quote-author">— {q.author}</div>
+    </div>
+  );
+}
+
+function BlockModal({ block, onSave, onDelete, onClose, slotInfo }) {
+  const [title, setTitle] = useState(block ? block.title : '');
+  const [category, setCategory] = useState(block ? block.category : 'learning');
+  const [startTime, setStartTime] = useState(block ? block.startTime : (slotInfo ? slotInfo.time : '09:00'));
+  const [endTime, setEndTime] = useState(block ? block.endTime : (slotInfo ? `${String(parseInt(slotInfo.time) + 1).padStart(2,'0')}:00` : '10:00'));
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!title.trim()) return;
+    onSave({
+      id: block ? block.id : Date.now(),
+      title: title.trim(),
+      category,
+      startTime,
+      endTime,
+      dayKey: block ? block.dayKey : slotInfo.dayKey,
+    });
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <h3>{block ? 'Edit Block' : 'New Time Block'}</h3>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>What are you doing?</label>
+            <input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Udemy Lesson 5" autoFocus />
+          </div>
+          <div className="form-group">
+            <label>Category</label>
+            <select value={category} onChange={e => setCategory(e.target.value)}>
+              {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.emoji} {c.name}</option>)}
+            </select>
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label>Start</label>
+              <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label>End</label>
+              <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} />
+            </div>
+          </div>
+          <div className="modal-actions">
+            {block && <button type="button" className="btn btn-danger" onClick={() => onDelete(block.id)}>Delete</button>}
+            <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
+            <button type="submit" className="btn btn-primary">{block ? 'Update' : 'Add Block'}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function WeeklyPlanner({ gcal, blocks, setBlocks }) {
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [viewMode, setViewMode] = useState('week'); // 'week' or 'today'
+  const [modal, setModal] = useState(null);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+
+  const weekDates = getWeekDates(weekOffset);
+  const today = new Date();
+  const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+  const toggleSelect = (id, e) => {
+    e.stopPropagation();
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAllVisible = () => {
+    const visibleKeys = new Set(visibleDates.map(d => dateKey(d)));
+    const visibleBlocks = blocks.filter(b => visibleKeys.has(b.dayKey));
+    setSelectedIds(new Set(visibleBlocks.map(b => b.id)));
+  };
+
+  const deleteSelected = () => {
+    if (selectedIds.size === 0) return;
+    setBlocks(prev => prev.filter(b => !selectedIds.has(b.id)));
+    setSelectedIds(new Set());
+    setSelectMode(false);
+  };
+
+  const exitSelectMode = () => {
+    setSelectMode(false);
+    setSelectedIds(new Set());
+  };
+
+  // Fetch Google Calendar events when signed in or week changes
+  useEffect(() => {
+    if (gcal && gcal.signedIn) {
+      const start = viewMode === 'today' ? todayDate : weekDates[0];
+      const end = viewMode === 'today' ? new Date(todayDate.getTime() + 86400000) : new Date(weekDates[6].getTime() + 86400000);
+      gcal.fetchEvents(start, end);
+    }
+  }, [gcal?.signedIn, weekOffset, viewMode]);
+
+  const visibleDates = viewMode === 'today' ? [todayDate] : weekDates;
+  const visibleDayNames = viewMode === 'today'
+    ? [DAYS[(todayDate.getDay() + 6) % 7]]
+    : DAYS;
+
+  const handleTodayClick = () => {
+    if (viewMode === 'today') {
+      setViewMode('week');
+      setWeekOffset(0);
+    } else {
+      setViewMode('today');
+      setWeekOffset(0);
+    }
+  };
+
+  const handleSlotClick = (dayIndex, hour) => {
+    const dk = dateKey(visibleDates[dayIndex]);
+    setModal({ mode: 'new', slotInfo: { dayKey: dk, time: `${String(hour).padStart(2,'0')}:00` } });
+  };
+
+  const handleBlockClick = (block, e) => {
+    e.stopPropagation();
+    setModal({ mode: 'edit', block });
+  };
+
+  const handleSave = (blockData) => {
+    if (modal.mode === 'edit') {
+      setBlocks(prev => prev.map(b => b.id === blockData.id ? blockData : b));
+    } else {
+      setBlocks(prev => [...prev, blockData]);
+    }
+    setModal(null);
+  };
+
+  const handleDelete = (id) => {
+    setBlocks(prev => prev.filter(b => b.id !== id));
+    setModal(null);
+  };
+
+  const getBlocksForDay = (dayKey) => blocks.filter(b => b.dayKey === dayKey);
+
+  const getBlockStyle = (block) => {
+    const [sh, sm] = block.startTime.split(':').map(Number);
+    const [eh, em] = block.endTime.split(':').map(Number);
+    const startMinutes = (sh - 6) * 60 + sm;
+    const duration = (eh - sh) * 60 + (em - sm);
+    return {
+      top: `${(startMinutes / 60) * 48}px`,
+      height: `${Math.max((duration / 60) * 48, 24)}px`,
+    };
+  };
+
+  const formatTimeRange = (start, end) => {
+    const fmt = (t) => {
+      const [h, m] = t.split(':').map(Number);
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      const h12 = h % 12 || 12;
+      return m === 0 ? `${h12} ${ampm}` : `${h12}:${String(m).padStart(2,'0')} ${ampm}`;
+    };
+    return `${fmt(start)} — ${fmt(end)}`;
+  };
+
+  const todayDk = dateKey(todayDate);
+  const todayBlocks = getBlocksForDay(todayDk).sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+  const greetingName = (() => {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    return 'Good evening';
+  })();
+
+  if (viewMode === 'today') {
+    return (
+      <div>
+        <div className="week-header">
+          <div className="week-nav">
+            <span>{todayDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</span>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {todayBlocks.length > 0 && <button className={`btn-select-mode ${selectMode ? 'active' : ''}`} onClick={() => selectMode ? exitSelectMode() : setSelectMode(true)}>{selectMode ? 'Cancel' : 'Select'}</button>}
+            <button className="btn btn-today-active" onClick={handleTodayClick}>Back to Week</button>
+          </div>
+        </div>
+
+        {selectMode && (
+          <div className="select-bar">
+            <span className="select-count">{selectedIds.size} selected</span>
+            <button className="btn-select-all" onClick={selectAllVisible}>Select All</button>
+            {selectedIds.size > 0 && <button className="btn-select-delete" onClick={deleteSelected}>Delete ({selectedIds.size})</button>}
+            <button className="btn-select-cancel" onClick={exitSelectMode}>Cancel</button>
+          </div>
+        )}
+
+        <div className="today-view">
+          <div className="today-greeting">
+            <h2>{greetingName}! &#9728;&#65039;</h2>
+            <p>{todayBlocks.length > 0 ? `You have ${todayBlocks.length} block${todayBlocks.length > 1 ? 's' : ''} planned — you got this!` : 'No blocks yet — plan something great!'}</p>
+          </div>
+
+          {gcal?.signedIn && gcal.events[todayDk] && gcal.events[todayDk].length > 0 && (
+            <div className="today-gcal-section">
+              <div className="today-gcal-label">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="#4285f4"><path d="M19 3h-1V1h-2v2H8V1H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm0 16H5V8h14v11z"/></svg>
+                Google Calendar
+              </div>
+              {gcal.events[todayDk].map(ev => (
+                <div key={ev.id} className="today-gcal-item">
+                  <div className="today-gcal-dot"></div>
+                  <div className="today-gcal-info">
+                    <div className="today-gcal-title">{ev.title}</div>
+                    <div className="today-gcal-time">{ev.allDay ? 'All day' : `${ev.startTime} — ${ev.endTime}`}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {todayBlocks.length === 0 ? (
+            <div className="today-empty">
+              <p>Your day is wide open</p>
+              <button className="today-add-btn" onClick={() => setModal({ mode: 'new', slotInfo: { dayKey: todayDk, time: '09:00' } })}>+ Add a block</button>
+            </div>
+          ) : (
+            todayBlocks.map(block => {
+              const cat = CATEGORIES.find(c => c.id === block.category);
+              const isSelected = selectedIds.has(block.id);
+              return (
+                <div key={block.id} className={`today-block ${isSelected ? 'selected' : ''}`} onClick={(e) => selectMode ? toggleSelect(block.id, e) : handleBlockClick(block, e)}>
+                  {selectMode && <div className="select-check">{isSelected ? '✓' : ''}</div>}
+                  <div className={`today-block-dot dot-${block.category}`}>{cat?.emoji}</div>
+                  <div className="today-block-info">
+                    <div className="today-block-title">{block.title}</div>
+                    <div className="today-block-time">{formatTimeRange(block.startTime, block.endTime)}</div>
+                  </div>
+                  <span className={`today-block-cat badge-${block.category}`}>{cat?.name}</span>
+                </div>
+              );
+            })
+          )}
+
+          {todayBlocks.length > 0 && (
+            <button className="today-add-btn" style={{ alignSelf: 'center', marginTop: 8 }} onClick={() => setModal({ mode: 'new', slotInfo: { dayKey: todayDk, time: '09:00' } })}>+ Add a block</button>
+          )}
+        </div>
+
+        {modal && (
+          <BlockModal
+            block={modal.mode === 'edit' ? modal.block : null}
+            slotInfo={modal.slotInfo}
+            onSave={handleSave}
+            onDelete={handleDelete}
+            onClose={() => setModal(null)}
+          />
+        )}
+      </div>
+    );
+  }
+
+  const weekHeaderText = formatWeekRange(weekDates);
+
+  return (
+    <div>
+      <div className="week-header">
+        <div className="week-nav">
+          <button onClick={() => setWeekOffset(w => w - 1)}>&#8249;</button>
+          <span>{weekHeaderText}</span>
+          <button onClick={() => setWeekOffset(w => w + 1)}>&#8250;</button>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className={`btn-select-mode ${selectMode ? 'active' : ''}`} onClick={() => selectMode ? exitSelectMode() : setSelectMode(true)}>{selectMode ? 'Cancel' : 'Select'}</button>
+          <button className="btn btn-secondary" onClick={handleTodayClick}>Today</button>
+        </div>
+      </div>
+
+      {selectMode && (
+        <div className="select-bar">
+          <span className="select-count">{selectedIds.size} selected</span>
+          <button className="btn-select-all" onClick={selectAllVisible}>Select All This Week</button>
+          {selectedIds.size > 0 && <button className="btn-select-delete" onClick={deleteSelected}>Delete ({selectedIds.size})</button>}
+          <button className="btn-select-cancel" onClick={exitSelectMode}>Cancel</button>
+        </div>
+      )}
+
+      <div className="week-grid view-week">
+        <div className="corner-header"></div>
+        {weekDates.map((date, i) => (
+          <div key={i} className={`day-header ${isToday(date) ? 'today' : ''}`}>
+            {DAYS[i]}
+            <span className="date-num">{date.getDate()}</span>
+          </div>
+        ))}
+
+        {gcal?.signedIn && weekDates.some(d => gcal.events[dateKey(d)]?.length > 0) && (
+          <React.Fragment>
+            <div style={{ background: '#fef6ee', padding: '4px 2px', fontSize: '0.55rem', color: '#4285f4', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', borderBottom: '2px solid #f5e6d6' }}>GCal</div>
+            {weekDates.map((date, i) => {
+              const dk = dateKey(date);
+              const dayEvents = gcal.events[dk] || [];
+              return (
+                <div key={`gcal-${i}`} className="gcal-events-strip">
+                  {dayEvents.map(ev => (
+                    <div key={ev.id} className={`gcal-event ${ev.type === 'task' ? 'gcal-task' : ''}`} title={`${ev.title} (${ev.allDay ? 'All day' : ev.startTime})`}>
+                      <span className="gcal-event-time">{ev.type === 'task' ? '☑' : ev.allDay ? '◆' : ev.startTime}</span> {ev.title}
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+          </React.Fragment>
+        )}
+
+        {HOURS.map(hour => (
+          <React.Fragment key={hour}>
+            <div className="time-label">{`${hour}:00`}</div>
+            {weekDates.map((date, dayIndex) => {
+              const dk = dateKey(date);
+              const dayBlocks = hour === 6 ? getBlocksForDay(dk) : [];
+              return (
+                <div key={dayIndex} className="time-slot" onClick={() => handleSlotClick(dayIndex, hour)}>
+                  {dayBlocks.map(block => {
+                    const cat = CATEGORIES.find(c => c.id === block.category);
+                    const isSelected = selectedIds.has(block.id);
+                    return (
+                      <div
+                        key={block.id}
+                        className={`time-block ${cat?.color || ''} ${isSelected ? 'selected' : ''}`}
+                        style={getBlockStyle(block)}
+                        onClick={(e) => selectMode ? toggleSelect(block.id, e) : handleBlockClick(block, e)}
+                      >
+                        {selectMode && <span className="select-check">{isSelected ? '✓' : ''}</span>}
+                        <span className="block-title">{cat?.emoji} {block.title}</span>
+                        <span className="block-time">{block.startTime} - {block.endTime}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </React.Fragment>
+        ))}
+      </div>
+
+      {modal && (
+        <BlockModal
+          block={modal.mode === 'edit' ? modal.block : null}
+          slotInfo={modal.slotInfo}
+          onSave={handleSave}
+          onDelete={handleDelete}
+          onClose={() => setModal(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+function Roadmap({ milestones, setMilestones }) {
+  const [newTitle, setNewTitle] = useState('');
+  const [adding, setAdding] = useState(false);
+  const [expanded, setExpanded] = useState(null);
+  const [stepInputs, setStepInputs] = useState({});
+  const [editingId, setEditingId] = useState(null);
+  const [editTitle, setEditTitle] = useState('');
+
+  const addMilestone = () => {
+    if (!newTitle.trim()) return;
+    setMilestones(prev => [...prev, { id: Date.now(), title: newTitle.trim(), steps: [] }]);
+    setNewTitle('');
+    setAdding(false);
+  };
+
+  const deleteMilestone = (id) => {
+    setMilestones(prev => prev.filter(m => m.id !== id));
+    if (expanded === id) setExpanded(null);
+  };
+
+  const startRename = (m, e) => {
+    e.stopPropagation();
+    setEditingId(m.id);
+    setEditTitle(m.title);
+  };
+
+  const saveRename = (id) => {
+    if (editTitle.trim()) {
+      setMilestones(prev => prev.map(m => m.id === id ? { ...m, title: editTitle.trim() } : m));
+    }
+    setEditingId(null);
+    setEditTitle('');
+  };
+
+  const addStep = (milestoneId) => {
+    const text = (stepInputs[milestoneId] || '').trim();
+    if (!text) return;
+    setMilestones(prev => prev.map(m =>
+      m.id === milestoneId ? { ...m, steps: [...m.steps, { id: Date.now(), text, done: false }] } : m
+    ));
+    setStepInputs(prev => ({ ...prev, [milestoneId]: '' }));
+  };
+
+  const toggleStep = (milestoneId, stepId) => {
+    setMilestones(prev => prev.map(m =>
+      m.id === milestoneId ? { ...m, steps: m.steps.map(s => s.id === stepId ? { ...s, done: !s.done } : s) } : m
+    ));
+  };
+
+  const deleteStep = (milestoneId, stepId) => {
+    setMilestones(prev => prev.map(m =>
+      m.id === milestoneId ? { ...m, steps: m.steps.filter(s => s.id !== stepId) } : m
+    ));
+  };
+
+  const isMilestoneDone = (m) => m.steps.length > 0 && m.steps.every(s => s.done);
+
+  const getOverallProgress = () => {
+    const allSteps = milestones.flatMap(m => m.steps);
+    if (allSteps.length === 0) return 0;
+    return Math.round((allSteps.filter(s => s.done).length / allSteps.length) * 100);
+  };
+
+  const getMilestoneProgress = (m) => {
+    if (m.steps.length === 0) return 0;
+    return Math.round((m.steps.filter(s => s.done).length / m.steps.length) * 100);
+  };
+
+  // Find first non-complete milestone
+  const activeIndex = milestones.findIndex(m => !isMilestoneDone(m));
+
+  return (
+    <div className="roadmap-container">
+      <div className="roadmap-header">
+        <h2>My Roadmap</h2>
+      </div>
+
+      {milestones.length > 0 && (
+        <div className="roadmap-overall">
+          <div className="roadmap-overall-top">
+            <span className="roadmap-overall-label">Overall progress</span>
+            <span className="roadmap-overall-pct">{getOverallProgress()}%</span>
+          </div>
+          <div className="roadmap-bar-bg">
+            <div className="roadmap-bar-fill" style={{ width: `${getOverallProgress()}%` }}></div>
+          </div>
+        </div>
+      )}
+
+      <div className="roadmap-timeline">
+        {milestones.map((m, i) => {
+          const done = isMilestoneDone(m);
+          const isActive = i === activeIndex;
+          const isExpanded = expanded === m.id;
+          const pct = getMilestoneProgress(m);
+
+          return (
+            <div key={m.id} className="roadmap-milestone">
+              <div className={`roadmap-dot ${done ? 'done' : isActive ? 'active' : ''}`}>
+                {done ? '✓' : i + 1}
+              </div>
+              <div
+                className={`milestone-card ${done ? 'done' : ''} ${isActive ? 'active-ms' : ''}`}
+                onClick={() => setExpanded(isExpanded ? null : m.id)}
+              >
+                <div className="milestone-top">
+                  {editingId === m.id ? (
+                    <input
+                      value={editTitle}
+                      onChange={e => setEditTitle(e.target.value)}
+                      onBlur={() => saveRename(m.id)}
+                      onKeyDown={e => { if (e.key === 'Enter') saveRename(m.id); if (e.key === 'Escape') { setEditingId(null); setEditTitle(''); } }}
+                      onClick={e => e.stopPropagation()}
+                      autoFocus
+                      style={{ flex: 1, padding: '6px 10px', border: '2px solid var(--accent-primary)', borderRadius: 8, fontFamily: "'Inter', sans-serif", fontSize: '1rem', fontWeight: 700, outline: 'none' }}
+                    />
+                  ) : (
+                    <span className={`milestone-title ${done ? 'done-text' : ''}`}>{m.title}</span>
+                  )}
+                  <div className="milestone-actions">
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-light)', fontWeight: 600, marginRight: 4 }}>
+                      {m.steps.length > 0 ? `${pct}%` : 'No steps yet'}
+                    </span>
+                    <button title="Rename" onClick={(e) => startRename(m, e)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem', padding: '2px 4px', color: '#d4c0a8', transition: 'color 0.2s' }}>✎</button>
+                    <button className="del-btn" onClick={(e) => { e.stopPropagation(); deleteMilestone(m.id); }}>×</button>
+                  </div>
+                </div>
+
+                {isExpanded && (
+                  <div className="milestone-steps" onClick={e => e.stopPropagation()}>
+                    {m.steps.map(s => (
+                      <div key={s.id} className="step-item">
+                        <div className={`step-check ${s.done ? 'checked' : ''}`} onClick={() => toggleStep(m.id, s.id)}>
+                          {s.done && '✓'}
+                        </div>
+                        <span className={`step-text ${s.done ? 'done-step' : ''}`}>{s.text}</span>
+                        <button className="step-delete" onClick={() => deleteStep(m.id, s.id)}>×</button>
+                      </div>
+                    ))}
+                    <div className="add-step-row">
+                      <input
+                        value={stepInputs[m.id] || ''}
+                        onChange={e => setStepInputs(prev => ({ ...prev, [m.id]: e.target.value }))}
+                        placeholder="Add a step..."
+                        onKeyDown={e => e.key === 'Enter' && addStep(m.id)}
+                      />
+                      <button onClick={() => addStep(m.id)}>+</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+
+        <div className="roadmap-milestone">
+          <div className="roadmap-dot" style={{ background: '#eedcc8', fontSize: '0.8rem' }}>+</div>
+          <div className="add-milestone-card" onClick={() => setAdding(true)}>
+            {adding ? (
+              <div className="add-milestone-form" onClick={e => e.stopPropagation()}>
+                <input
+                  value={newTitle}
+                  onChange={e => setNewTitle(e.target.value)}
+                  placeholder="e.g. Build first Flutter screen"
+                  autoFocus
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') addMilestone();
+                    if (e.key === 'Escape') { setAdding(false); setNewTitle(''); }
+                  }}
+                />
+                <button className="btn btn-primary" onClick={addMilestone}>Add</button>
+              </div>
+            ) : (
+              <span style={{ color: 'var(--text-light)', fontWeight: 600 }}>+ Add a milestone</span>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function IdeaModal({ idea, column, onSave, onDelete, onClose, columns }) {
+  const [title, setTitle] = useState(idea ? idea.title : '');
+  const [notes, setNotes] = useState(idea ? idea.notes : '');
+  const [col, setCol] = useState(column);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!title.trim()) return;
+    onSave({
+      id: idea ? idea.id : Date.now(),
+      title: title.trim(),
+      notes: notes.trim(),
+    }, col);
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <h3>{idea ? 'Edit Idea' : 'New Idea'}</h3>
+        <form onSubmit={handleSubmit}>
+          <div className="idea-form-group">
+            <label>Title</label>
+            <input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Add confetti when task is completed" autoFocus />
+          </div>
+          <div className="idea-form-group">
+            <label>Notes</label>
+            <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Flesh out the idea..." />
+          </div>
+          <div className="idea-form-group">
+            <label>Column</label>
+            <div className="move-btn-group">
+              {columns.map(c => (
+                <button key={c.id} type="button" className={`move-btn ${col === c.id ? 'active-col' : ''}`} onClick={() => setCol(c.id)}>
+                  {c.emoji} {c.name}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="modal-actions">
+            {idea && <button type="button" className="btn btn-danger" onClick={() => onDelete(idea.id)}>Delete</button>}
+            <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
+            <button type="submit" className="btn btn-primary">{idea ? 'Save' : 'Add Idea'}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function IdeasBoard({ ideas, setIdeas }) {
+  const COLUMNS = [
+    { id: 'ideas', name: 'Ideas', emoji: '💡', cssClass: 'col-ideas' },
+    { id: 'design', name: 'Design', emoji: '🎨', cssClass: 'col-design' },
+    { id: 'functions', name: 'Functions', emoji: '⚙️', cssClass: 'col-functions' },
+  ];
+
+  const [modal, setModal] = useState(null); // { mode: 'new'|'edit', idea?, column }
+
+  const handleSave = (ideaData, column) => {
+    if (modal.mode === 'edit') {
+      setIdeas(prev => prev.map(i => i.id === ideaData.id ? { ...ideaData, column } : i));
+    } else {
+      setIdeas(prev => [...prev, { ...ideaData, column }]);
+    }
+    setModal(null);
+  };
+
+  const handleDelete = (id) => {
+    setIdeas(prev => prev.filter(i => i.id !== id));
+    setModal(null);
+  };
+
+  const getIdeasForColumn = (colId) => ideas.filter(i => i.column === colId);
+
+  return (
+    <div>
+      <div className="ideas-board">
+        {COLUMNS.map(col => {
+          const colIdeas = getIdeasForColumn(col.id);
+          return (
+            <div key={col.id} className="ideas-column">
+              <div className="ideas-col-header">
+                <div className={`ideas-col-icon ${col.cssClass}`}>{col.emoji}</div>
+                <span className="ideas-col-title">{col.name}</span>
+                <span className="ideas-col-count">{colIdeas.length}</span>
+              </div>
+
+              {colIdeas.map(idea => (
+                <div key={idea.id} className="idea-card" onClick={() => setModal({ mode: 'edit', idea, column: col.id })}>
+                  <div className="idea-card-title">{idea.title}</div>
+                  {idea.notes && <div className="idea-card-notes">{idea.notes}</div>}
+                </div>
+              ))}
+
+              <button className="idea-add-btn" onClick={() => setModal({ mode: 'new', column: col.id })}>
+                + Add idea
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      {modal && (
+        <IdeaModal
+          idea={modal.mode === 'edit' ? modal.idea : null}
+          column={modal.column}
+          columns={COLUMNS}
+          onSave={handleSave}
+          onDelete={handleDelete}
+          onClose={() => setModal(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+function PomodoroTimer() {
+  const MODES = { work: 25 * 60, shortBreak: 5 * 60, longBreak: 15 * 60 };
+  const [mode, setMode] = useState('work');
+  const [timeLeft, setTimeLeft] = useState(MODES.work);
+  const [isRunning, setIsRunning] = useState(false);
+  const [sessions, setSessions] = useState(() => loadData('pomo-sessions-today', 0));
+  const [totalToday, setTotalToday] = useState(() => loadData('pomo-total-today', 0));
+  const intervalRef = useRef(null);
+  const audioRef = useRef(null);
+
+  useEffect(() => {
+    saveData('pomo-sessions-today', sessions);
+    saveData('pomo-total-today', totalToday);
+  }, [sessions, totalToday]);
+
+  useEffect(() => {
+    if (isRunning) {
+      intervalRef.current = setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev <= 1) {
+            clearInterval(intervalRef.current);
+            setIsRunning(false);
+            if (mode === 'work') {
+              setSessions(s => s + 1);
+              setTotalToday(t => t + MODES.work);
+              try { new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH2Kj4+MiYOAeHRwbm1ub3J1eHx/goWHiYqLi4uKiYeFgn56dnNwbm1sbG1ub3J0d3p9gIOGiImKi4uLioqIhoSBfnp3dHFvbWxsbW5vcXR3en2Ag4aIiouLi4uKioiGhIF+e3h1cm9tbGxtbm9ydHd6fYCDhoiKi4uLi4qKiIaEgX57eHVyb21sbG1ub3F0d3p9gIOGiIqLi4uLioqIhoSBfnt4dXJvbWxsbW5vcXR3en2Ag4WIiouLi4uKioiGhIF+e3h1cm9tbGxtbm9xdHd6fYCDhoiKi4uLi4qKiIaEgX57eHVyb21sbG1ub3F0d3p9gIOGiIqLi4uLioqIhoQ=').play(); } catch {}
+            }
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(intervalRef.current);
+  }, [isRunning, mode]);
+
+  const switchMode = (newMode) => {
+    setIsRunning(false);
+    clearInterval(intervalRef.current);
+    setMode(newMode);
+    setTimeLeft(MODES[newMode]);
+  };
+
+  const toggleTimer = () => {
+    if (timeLeft === 0) {
+      setTimeLeft(MODES[mode]);
+    }
+    setIsRunning(!isRunning);
+  };
+
+  const resetTimer = () => {
+    setIsRunning(false);
+    clearInterval(intervalRef.current);
+    setTimeLeft(MODES[mode]);
+  };
+
+  const formatTime = (secs) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  };
+
+  const modeLabels = { work: 'Focus Time', shortBreak: 'Short Break', longBreak: 'Long Break' };
+
+  return (
+    <div className="pomodoro-container">
+      <div className="pomo-card">
+        <div className="pomo-mode-tabs">
+          {Object.keys(MODES).map(m => (
+            <button
+              key={m}
+              className={`pomo-mode-tab ${mode === m ? 'active' : ''}`}
+              onClick={() => switchMode(m)}
+            >
+              {modeLabels[m]}
+            </button>
+          ))}
+        </div>
+        <div className="pomo-timer">{formatTime(timeLeft)}</div>
+        <div className="pomo-label">{modeLabels[mode]}</div>
+        <div className="pomo-controls">
+          <button className="pomo-btn pomo-btn-start" onClick={toggleTimer}>
+            {isRunning ? 'Pause' : (timeLeft === 0 ? 'Restart' : 'Start')}
+          </button>
+          <button className="pomo-btn pomo-btn-reset" onClick={resetTimer}>Reset</button>
+        </div>
+        <div className="pomo-sessions">
+          {Array.from({ length: 4 }, (_, i) => (
+            <div key={i} className={`pomo-dot ${i < (sessions % 4) ? 'done' : ''}`}></div>
+          ))}
+        </div>
+      </div>
+
+      <div className="pomo-stats">
+        <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", marginBottom: 12 }}>Today's Stats</h3>
+        <div className="pomo-stat-row">
+          <span className="pomo-stat-label">Sessions completed</span>
+          <span className="pomo-stat-value">{sessions}</span>
+        </div>
+        <div className="pomo-stat-row">
+          <span className="pomo-stat-label">Total focus time</span>
+          <span className="pomo-stat-value">{Math.round(totalToday / 60)} min</span>
+        </div>
+        <div className="pomo-stat-row">
+          <span className="pomo-stat-label">Until long break</span>
+          <span className="pomo-stat-value">{4 - (sessions % 4)} sessions</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Settings() {
+  const [message, setMessage] = useState(null);
+  const fileInputRef = useRef(null);
+
+  const DATA_KEYS = [
+    'planner-blocks', 'roadmap-milestones', 'ideas-board',
+    'pomo-sessions-today', 'pomo-total-today',
+  ];
+
+  // Also grab any daily/weekly goal keys that might still exist
+  const getAllKeys = () => {
+    const keys = [...DATA_KEYS];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && (k.startsWith('goals-') || k.startsWith('planner-') || k.startsWith('roadmap-') || k.startsWith('ideas-') || k.startsWith('pomo-'))) {
+        if (!keys.includes(k)) keys.push(k);
+      }
+    }
+    return keys;
+  };
+
+  const handleExport = () => {
+    const keys = getAllKeys();
+    const data = {};
+    keys.forEach(k => {
+      const v = localStorage.getItem(k);
+      if (v !== null) data[k] = JSON.parse(v);
+    });
+    data._exportDate = new Date().toISOString();
+    data._appName = 'My Productivity Planner';
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `planner-backup-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setMessage({ type: 'success', text: 'Backup downloaded! Keep this file safe for your new Mac.' });
+    setTimeout(() => setMessage(null), 5000);
+  };
+
+  const handleImport = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (!data._appName || data._appName !== 'My Productivity Planner') {
+          setMessage({ type: 'error', text: 'This doesn\'t look like a planner backup file.' });
+          setTimeout(() => setMessage(null), 5000);
+          return;
+        }
+        Object.entries(data).forEach(([k, v]) => {
+          if (!k.startsWith('_')) {
+            localStorage.setItem(k, JSON.stringify(v));
+          }
+        });
+        setMessage({ type: 'success', text: 'Data restored! Refreshing...' });
+        setTimeout(() => window.location.reload(), 1500);
+      } catch {
+        setMessage({ type: 'error', text: 'Couldn\'t read that file. Make sure it\'s a valid backup.' });
+        setTimeout(() => setMessage(null), 5000);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  return (
+    <div className="settings-container">
+      <div className="settings-card">
+        <h3>Export your data</h3>
+        <p>Download all your planner data as a JSON file. Save it somewhere safe — you can import it on your new Mac or any other browser.</p>
+        <div className="settings-actions">
+          <button className="settings-btn settings-btn-export" onClick={handleExport}>Download backup</button>
+        </div>
+      </div>
+
+      <div className="settings-card">
+        <h3>Import data</h3>
+        <p>Restore from a previous backup. This will merge with any existing data in this browser.</p>
+        <div className="settings-actions">
+          <button className="settings-btn settings-btn-import" onClick={() => fileInputRef.current?.click()}>Choose backup file</button>
+          <input ref={fileInputRef} type="file" accept=".json" style={{ display: 'none' }} onChange={handleImport} />
+        </div>
+      </div>
+
+      {message && (
+        <div className={message.type === 'success' ? 'settings-success' : 'settings-error'}>
+          {message.text}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function GCalBar({ gcal }) {
+  if (gcal.signedIn) {
+    return (
+      <div className="gcal-signin-bar">
+        <span>Google Calendar connected {gcal.status && <span style={{ color: '#27ae60', fontSize: '0.8rem' }}>— {gcal.status}</span>}</span>
+        <button className="gcal-signout-btn" onClick={gcal.signOut}>Disconnect</button>
+      </div>
+    );
+  }
+  return (
+    <div className="gcal-signin-bar">
+      <span>
+        Connect Google Calendar to see your events
+        {gcal.status && <span style={{ color: 'var(--accent-primary)', fontSize: '0.8rem', marginLeft: 8 }}>{gcal.status}</span>}
+      </span>
+      <button className="gcal-signin-btn" onClick={gcal.signIn}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Connect
+      </button>
+    </div>
+  );
+}
+
+function LoginScreen({ onSignIn }) {
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
+      <div style={{ textAlign: 'center', background: 'var(--card)', padding: '48px 40px', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow-lg)', maxWidth: 400 }}>
+        <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", color: 'var(--accent-primary)', fontSize: '1.8rem', marginBottom: 8 }}>My Productivity Planner</h1>
+        <p style={{ color: 'var(--text-light)', marginBottom: 32, fontSize: '0.9rem' }}>Sign in to sync your data across devices</p>
+        <button onClick={onSignIn} style={{
+          padding: '12px 28px', borderRadius: 50, border: '2px solid #4285f4', background: 'white', color: '#4285f4',
+          fontFamily: "'Inter', sans-serif", fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 10, transition: 'all 0.2s'
+        }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Sign in with Google
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const { user, loading: authLoading, signIn: authSignIn, signOut: authSignOut } = useAuth();
+  const [tab, setTab] = useState('planner');
+  const gcal = useGoogleCalendar();
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+
+  const hid = user ? getHouseholdId(user) : null;
+  const [blocks, setBlocks, blocksLoaded] = useFirestoreDoc('plannerData', hid ? `${hid}_blocks` : null, []);
+  const [milestones, setMilestones, milestonesLoaded] = useFirestoreDoc('plannerData', hid ? `${hid}_milestones` : null, []);
+  const [ideas, setIdeas, ideasLoaded] = useFirestoreDoc('plannerData', hid ? `${hid}_ideas` : null, []);
+
+  // Migrate localStorage data to Firestore on first sign-in
+  useEffect(() => {
+    if (!user || !hid || !blocksLoaded || !ideasLoaded || !milestonesLoaded) return;
+    const migrated = localStorage.getItem('firestore_migrated');
+    if (migrated) return;
+
+    const localBlocks = loadData('planner-blocks', null);
+    const localMilestones = loadData('roadmap-milestones', null);
+    const localIdeas = loadData('ideas-board', null);
+
+    if (localBlocks && localBlocks.length > 0) setBlocks(localBlocks);
+    if (localMilestones && localMilestones.length > 0) setMilestones(localMilestones);
+    if (localIdeas && localIdeas.length > 0) setIdeas(localIdeas);
+
+    localStorage.setItem('firestore_migrated', 'true');
+  }, [user, hid, blocksLoaded, ideasLoaded, milestonesLoaded]);
+
+  if (authLoading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
+        <p style={{ color: 'var(--text-light)', fontSize: '1rem' }}>Loading...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginScreen onSignIn={authSignIn} />;
+  }
+
+  return (
+    <div>
+      <header className="app-header">
+        <h1>My Productivity Planner</h1>
+        <nav className="nav-tabs">
+          <button className={`nav-tab ${tab === 'planner' ? 'active' : ''}`} onClick={() => setTab('planner')}>Week</button>
+          <button className={`nav-tab ${tab === 'roadmap' ? 'active' : ''}`} onClick={() => setTab('roadmap')}>Roadmap</button>
+          <button className={`nav-tab ${tab === 'ideas' ? 'active' : ''}`} onClick={() => setTab('ideas')}>Ideas</button>
+          <button className={`nav-tab ${tab === 'pomodoro' ? 'active' : ''}`} onClick={() => setTab('pomodoro')}>Pomodoro</button>
+        </nav>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span className="header-date">{dateStr}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {user.photoURL && <img src={user.photoURL} alt="" style={{ width: 28, height: 28, borderRadius: '50%' }} />}
+            <button onClick={authSignOut} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', fontSize: '0.7rem', padding: '4px 10px', borderRadius: 50, cursor: 'pointer', fontFamily: "'Inter', sans-serif" }}>Sign out</button>
+          </div>
+          <button className="settings-gear" onClick={() => setTab('settings')} title="Settings">&#9881;</button>
+        </div>
+      </header>
+      <main className="main-content">
+        <QuoteBanner />
+        {(tab === 'planner') && <GCalBar gcal={gcal} />}
+        {tab === 'planner' && <WeeklyPlanner gcal={gcal} blocks={blocks} setBlocks={setBlocks} />}
+        {tab === 'roadmap' && <Roadmap milestones={milestones} setMilestones={setMilestones} />}
+        {tab === 'ideas' && <IdeasBoard ideas={ideas} setIdeas={setIdeas} />}
+        {tab === 'pomodoro' && <PomodoroTimer />}
+        {tab === 'settings' && <Settings />}
+      </main>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
