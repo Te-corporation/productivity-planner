@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shiba is coming</title>
+<title>My Productivity Planner</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
@@ -2320,6 +2320,8 @@ function Roadmap({ milestones, setMilestones }) {
   const [adding, setAdding] = useState(false);
   const [expanded, setExpanded] = useState(null);
   const [stepInputs, setStepInputs] = useState({});
+  const [editingId, setEditingId] = useState(null);
+  const [editTitle, setEditTitle] = useState('');
 
   const addMilestone = () => {
     if (!newTitle.trim()) return;
@@ -2331,6 +2333,20 @@ function Roadmap({ milestones, setMilestones }) {
   const deleteMilestone = (id) => {
     setMilestones(prev => prev.filter(m => m.id !== id));
     if (expanded === id) setExpanded(null);
+  };
+
+  const startRename = (m, e) => {
+    e.stopPropagation();
+    setEditingId(m.id);
+    setEditTitle(m.title);
+  };
+
+  const saveRename = (id) => {
+    if (editTitle.trim()) {
+      setMilestones(prev => prev.map(m => m.id === id ? { ...m, title: editTitle.trim() } : m));
+    }
+    setEditingId(null);
+    setEditTitle('');
   };
 
   const addStep = (milestoneId) => {
@@ -2405,11 +2421,24 @@ function Roadmap({ milestones, setMilestones }) {
                 onClick={() => setExpanded(isExpanded ? null : m.id)}
               >
                 <div className="milestone-top">
-                  <span className={`milestone-title ${done ? 'done-text' : ''}`}>{m.title}</span>
+                  {editingId === m.id ? (
+                    <input
+                      value={editTitle}
+                      onChange={e => setEditTitle(e.target.value)}
+                      onBlur={() => saveRename(m.id)}
+                      onKeyDown={e => { if (e.key === 'Enter') saveRename(m.id); if (e.key === 'Escape') { setEditingId(null); setEditTitle(''); } }}
+                      onClick={e => e.stopPropagation()}
+                      autoFocus
+                      style={{ flex: 1, padding: '6px 10px', border: '2px solid var(--accent-primary)', borderRadius: 8, fontFamily: "'Inter', sans-serif", fontSize: '1rem', fontWeight: 700, outline: 'none' }}
+                    />
+                  ) : (
+                    <span className={`milestone-title ${done ? 'done-text' : ''}`}>{m.title}</span>
+                  )}
                   <div className="milestone-actions">
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-light)', fontWeight: 600, marginRight: 4 }}>
                       {m.steps.length > 0 ? `${pct}%` : 'No steps yet'}
                     </span>
+                    <button title="Rename" onClick={(e) => startRename(m, e)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem', padding: '2px 4px', color: '#d4c0a8', transition: 'color 0.2s' }}>✎</button>
                     <button className="del-btn" onClick={(e) => { e.stopPropagation(); deleteMilestone(m.id); }}>×</button>
                   </div>
                 </div>
@@ -2725,7 +2754,7 @@ function Settings() {
       if (v !== null) data[k] = JSON.parse(v);
     });
     data._exportDate = new Date().toISOString();
-    data._appName = 'Shiba is coming';
+    data._appName = 'My Productivity Planner';
 
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -2745,7 +2774,7 @@ function Settings() {
     reader.onload = (ev) => {
       try {
         const data = JSON.parse(ev.target.result);
-        if (!data._appName || data._appName !== 'Shiba is coming') {
+        if (!data._appName || data._appName !== 'My Productivity Planner') {
           setMessage({ type: 'error', text: 'This doesn\'t look like a planner backup file.' });
           setTimeout(() => setMessage(null), 5000);
           return;
@@ -2821,7 +2850,7 @@ function LoginScreen({ onSignIn }) {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
       <div style={{ textAlign: 'center', background: 'var(--card)', padding: '48px 40px', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow-lg)', maxWidth: 400 }}>
-        <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", color: 'var(--accent-primary)', fontSize: '1.8rem', marginBottom: 8 }}>Shiba is coming</h1>
+        <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", color: 'var(--accent-primary)', fontSize: '1.8rem', marginBottom: 8 }}>My Productivity Planner</h1>
         <p style={{ color: 'var(--text-light)', marginBottom: 32, fontSize: '0.9rem' }}>Sign in to sync your data across devices</p>
         <button onClick={onSignIn} style={{
           padding: '12px 28px', borderRadius: 50, border: '2px solid #4285f4', background: 'white', color: '#4285f4',
@@ -2879,7 +2908,7 @@ function App() {
   return (
     <div>
       <header className="app-header">
-        <h1>Shiba is coming</h1>
+        <h1>My Productivity Planner</h1>
         <nav className="nav-tabs">
           <button className={`nav-tab ${tab === 'planner' ? 'active' : ''}`} onClick={() => setTab('planner')}>Week</button>
           <button className={`nav-tab ${tab === 'roadmap' ? 'active' : ''}`} onClick={() => setTab('roadmap')}>Roadmap</button>
