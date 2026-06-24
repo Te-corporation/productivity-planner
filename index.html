@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shiba is coming</title>
+<title>My Productivity Planner</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
@@ -536,6 +536,107 @@
   }
 
   .btn-danger:hover { background: #fecaca; }
+
+  /* Select mode */
+  .select-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff3e6;
+    border: 2px solid var(--accent-primary);
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .select-bar .select-count {
+    font-weight: 600;
+    color: var(--accent-dark);
+    font-size: 0.85rem;
+    margin-right: auto;
+  }
+  .select-bar button {
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: none;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-select-all { background: var(--accent-primary); color: white; }
+  .btn-select-all:hover { background: var(--accent-dark); }
+  .btn-select-cancel { background: #f5e6d6; color: var(--text); }
+  .btn-select-cancel:hover { background: #e6d2b8; }
+  .btn-select-delete { background: #dc2626; color: white; }
+  .btn-select-delete:hover { background: #b91c1c; }
+  .btn-select-mode {
+    padding: 8px 16px;
+    border-radius: 10px;
+    border: 2px solid var(--accent-primary);
+    background: white;
+    color: var(--accent-primary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-select-mode:hover { background: var(--accent-primary); color: white; }
+  .btn-select-mode.active { background: var(--accent-primary); color: white; }
+
+  .time-block.selected {
+    outline: 3px solid #dc2626;
+    outline-offset: -1px;
+    opacity: 0.85;
+  }
+  .time-block .select-check {
+    position: absolute;
+    top: 2px;
+    right: 4px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.8);
+    background: rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: white;
+  }
+  .time-block.selected .select-check {
+    background: #dc2626;
+    border-color: white;
+  }
+
+  .today-block.selected {
+    outline: 3px solid #dc2626;
+    outline-offset: -1px;
+    opacity: 0.85;
+  }
+  .today-block .select-check {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid #ddd;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: white;
+    flex-shrink: 0;
+  }
+  .today-block.selected .select-check {
+    background: #dc2626;
+    border-color: #dc2626;
+  }
 
   /* Roadmap */
   .roadmap-container {
@@ -1914,10 +2015,40 @@ function WeeklyPlanner({ gcal, blocks, setBlocks }) {
   const [weekOffset, setWeekOffset] = useState(0);
   const [viewMode, setViewMode] = useState('week'); // 'week' or 'today'
   const [modal, setModal] = useState(null);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(new Set());
 
   const weekDates = getWeekDates(weekOffset);
   const today = new Date();
   const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+  const toggleSelect = (id, e) => {
+    e.stopPropagation();
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAllVisible = () => {
+    const visibleKeys = new Set(visibleDates.map(d => dateKey(d)));
+    const visibleBlocks = blocks.filter(b => visibleKeys.has(b.dayKey));
+    setSelectedIds(new Set(visibleBlocks.map(b => b.id)));
+  };
+
+  const deleteSelected = () => {
+    if (selectedIds.size === 0) return;
+    setBlocks(prev => prev.filter(b => !selectedIds.has(b.id)));
+    setSelectedIds(new Set());
+    setSelectMode(false);
+  };
+
+  const exitSelectMode = () => {
+    setSelectMode(false);
+    setSelectedIds(new Set());
+  };
 
   // Fetch Google Calendar events when signed in or week changes
   useEffect(() => {
@@ -2007,8 +2138,20 @@ function WeeklyPlanner({ gcal, blocks, setBlocks }) {
           <div className="week-nav">
             <span>{todayDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</span>
           </div>
-          <button className="btn btn-today-active" onClick={handleTodayClick}>Back to Week</button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {todayBlocks.length > 0 && <button className={`btn-select-mode ${selectMode ? 'active' : ''}`} onClick={() => selectMode ? exitSelectMode() : setSelectMode(true)}>{selectMode ? 'Cancel' : 'Select'}</button>}
+            <button className="btn btn-today-active" onClick={handleTodayClick}>Back to Week</button>
+          </div>
         </div>
+
+        {selectMode && (
+          <div className="select-bar">
+            <span className="select-count">{selectedIds.size} selected</span>
+            <button className="btn-select-all" onClick={selectAllVisible}>Select All</button>
+            {selectedIds.size > 0 && <button className="btn-select-delete" onClick={deleteSelected}>Delete ({selectedIds.size})</button>}
+            <button className="btn-select-cancel" onClick={exitSelectMode}>Cancel</button>
+          </div>
+        )}
 
         <div className="today-view">
           <div className="today-greeting">
@@ -2042,8 +2185,10 @@ function WeeklyPlanner({ gcal, blocks, setBlocks }) {
           ) : (
             todayBlocks.map(block => {
               const cat = CATEGORIES.find(c => c.id === block.category);
+              const isSelected = selectedIds.has(block.id);
               return (
-                <div key={block.id} className="today-block" onClick={(e) => handleBlockClick(block, e)}>
+                <div key={block.id} className={`today-block ${isSelected ? 'selected' : ''}`} onClick={(e) => selectMode ? toggleSelect(block.id, e) : handleBlockClick(block, e)}>
+                  {selectMode && <div className="select-check">{isSelected ? '✓' : ''}</div>}
                   <div className={`today-block-dot dot-${block.category}`}>{cat?.emoji}</div>
                   <div className="today-block-info">
                     <div className="today-block-title">{block.title}</div>
@@ -2083,8 +2228,20 @@ function WeeklyPlanner({ gcal, blocks, setBlocks }) {
           <span>{weekHeaderText}</span>
           <button onClick={() => setWeekOffset(w => w + 1)}>&#8250;</button>
         </div>
-        <button className="btn btn-secondary" onClick={handleTodayClick}>Today</button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className={`btn-select-mode ${selectMode ? 'active' : ''}`} onClick={() => selectMode ? exitSelectMode() : setSelectMode(true)}>{selectMode ? 'Cancel' : 'Select'}</button>
+          <button className="btn btn-secondary" onClick={handleTodayClick}>Today</button>
+        </div>
       </div>
+
+      {selectMode && (
+        <div className="select-bar">
+          <span className="select-count">{selectedIds.size} selected</span>
+          <button className="btn-select-all" onClick={selectAllVisible}>Select All This Week</button>
+          {selectedIds.size > 0 && <button className="btn-select-delete" onClick={deleteSelected}>Delete ({selectedIds.size})</button>}
+          <button className="btn-select-cancel" onClick={exitSelectMode}>Cancel</button>
+        </div>
+      )}
 
       <div className="week-grid view-week">
         <div className="corner-header"></div>
@@ -2124,13 +2281,15 @@ function WeeklyPlanner({ gcal, blocks, setBlocks }) {
                 <div key={dayIndex} className="time-slot" onClick={() => handleSlotClick(dayIndex, hour)}>
                   {dayBlocks.map(block => {
                     const cat = CATEGORIES.find(c => c.id === block.category);
+                    const isSelected = selectedIds.has(block.id);
                     return (
                       <div
                         key={block.id}
-                        className={`time-block ${cat?.color || ''}`}
+                        className={`time-block ${cat?.color || ''} ${isSelected ? 'selected' : ''}`}
                         style={getBlockStyle(block)}
-                        onClick={(e) => handleBlockClick(block, e)}
+                        onClick={(e) => selectMode ? toggleSelect(block.id, e) : handleBlockClick(block, e)}
                       >
+                        {selectMode && <span className="select-check">{isSelected ? '✓' : ''}</span>}
                         <span className="block-title">{cat?.emoji} {block.title}</span>
                         <span className="block-time">{block.startTime} - {block.endTime}</span>
                       </div>
@@ -2566,7 +2725,7 @@ function Settings() {
       if (v !== null) data[k] = JSON.parse(v);
     });
     data._exportDate = new Date().toISOString();
-    data._appName = 'Shiba is coming';
+    data._appName = 'My Productivity Planner';
 
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -2586,7 +2745,7 @@ function Settings() {
     reader.onload = (ev) => {
       try {
         const data = JSON.parse(ev.target.result);
-        if (!data._appName || data._appName !== 'Shiba is coming') {
+        if (!data._appName || data._appName !== 'My Productivity Planner') {
           setMessage({ type: 'error', text: 'This doesn\'t look like a planner backup file.' });
           setTimeout(() => setMessage(null), 5000);
           return;
@@ -2662,7 +2821,7 @@ function LoginScreen({ onSignIn }) {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
       <div style={{ textAlign: 'center', background: 'var(--card)', padding: '48px 40px', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow-lg)', maxWidth: 400 }}>
-        <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", color: 'var(--accent-primary)', fontSize: '1.8rem', marginBottom: 8 }}>Shiba is coming</h1>
+        <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", color: 'var(--accent-primary)', fontSize: '1.8rem', marginBottom: 8 }}>My Productivity Planner</h1>
         <p style={{ color: 'var(--text-light)', marginBottom: 32, fontSize: '0.9rem' }}>Sign in to sync your data across devices</p>
         <button onClick={onSignIn} style={{
           padding: '12px 28px', borderRadius: 50, border: '2px solid #4285f4', background: 'white', color: '#4285f4',
@@ -2720,7 +2879,7 @@ function App() {
   return (
     <div>
       <header className="app-header">
-        <h1>Shiba is coming</h1>
+        <h1>My Productivity Planner</h1>
         <nav className="nav-tabs">
           <button className={`nav-tab ${tab === 'planner' ? 'active' : ''}`} onClick={() => setTab('planner')}>Week</button>
           <button className={`nav-tab ${tab === 'roadmap' ? 'active' : ''}`} onClick={() => setTab('roadmap')}>Roadmap</button>
