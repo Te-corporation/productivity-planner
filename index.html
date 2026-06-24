@@ -1158,46 +1158,48 @@
   /* Google Calendar */
   .gcal-signin-bar {
     background: var(--card);
-    border-radius: var(--radius);
-    padding: 14px 20px;
-    margin-bottom: 16px;
-    box-shadow: var(--shadow);
+    border-radius: 50px;
+    padding: 6px 16px;
+    margin-bottom: 12px;
+    box-shadow: none;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    border: 1px solid #f0e0d0;
+    max-width: 420px;
   }
 
   .gcal-signin-bar span {
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     color: var(--text-light);
   }
 
   .gcal-signin-btn {
-    padding: 8px 18px;
+    padding: 5px 12px;
     border-radius: 50px;
-    border: 2px solid #4285f4;
+    border: 1.5px solid #4285f4;
     background: white;
     color: #4285f4;
     font-family: 'Inter', sans-serif;
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
   }
 
   .gcal-signin-btn:hover { background: #4285f4; color: white; }
 
   .gcal-signout-btn {
-    padding: 6px 14px;
+    padding: 4px 10px;
     border-radius: 50px;
     border: none;
     background: #f5e6d6;
     color: var(--text-light);
     font-family: 'Inter', sans-serif;
-    font-size: 0.75rem;
+    font-size: 0.65rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
@@ -1618,6 +1620,8 @@ function useGoogleCalendar() {
           if (tokenResponse.access_token) {
             accessTokenRef.current = tokenResponse.access_token;
             window.gapi.client.setToken({ access_token: tokenResponse.access_token });
+            localStorage.setItem('gcal_token', tokenResponse.access_token);
+            localStorage.setItem('gcal_token_time', Date.now().toString());
             setSignedIn(true);
             setStatus('Connected!');
           } else {
@@ -1635,10 +1639,32 @@ function useGoogleCalendar() {
     }
     accessTokenRef.current = null;
     window.gapi?.client?.setToken(null);
+    localStorage.removeItem('gcal_token');
+    localStorage.removeItem('gcal_token_time');
     setSignedIn(false);
     setEvents({});
     setStatus('');
   }, []);
+
+  // Auto-reconnect from saved token on page load
+  useEffect(() => {
+    const savedToken = localStorage.getItem('gcal_token');
+    const savedTime = localStorage.getItem('gcal_token_time');
+    if (savedToken && savedTime) {
+      const age = Date.now() - parseInt(savedTime);
+      if (age < 3500000) { // token valid ~1 hour, reconnect if < 58 min old
+        initGapi().then(() => {
+          accessTokenRef.current = savedToken;
+          window.gapi.client.setToken({ access_token: savedToken });
+          setSignedIn(true);
+          setStatus('Connected!');
+        }).catch(() => {});
+      } else {
+        localStorage.removeItem('gcal_token');
+        localStorage.removeItem('gcal_token_time');
+      }
+    }
+  }, [initGapi]);
 
   return { signedIn, events, loading, status, signIn, signOut, fetchEvents };
 }
