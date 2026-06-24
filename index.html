@@ -934,7 +934,7 @@
 
   .idea-add-btn {
     width: 100%;
-    padding: 12px;
+    padding: 14px;
     border: 2px dashed #eedcc8;
     border-radius: 14px;
     background: transparent;
@@ -945,6 +945,8 @@
     cursor: pointer;
     transition: all 0.2s;
     margin-top: 4px;
+    -webkit-tap-highlight-color: rgba(232, 114, 12, 0.1);
+    touch-action: manipulation;
   }
 
   .idea-add-btn:hover {
@@ -1402,6 +1404,12 @@
     .week-grid { overflow-x: auto; }
   }
 
+  /* Touch-friendly taps */
+  button, .idea-card, .nav-tab, .milestone-card, .today-card {
+    -webkit-tap-highlight-color: rgba(232, 114, 12, 0.1);
+    touch-action: manipulation;
+  }
+
   @media (max-width: 768px) {
     .app-header {
       padding: 12px 16px;
@@ -1532,8 +1540,16 @@ function useFirestoreDoc(collectionName, docId, defaultVal) {
 
   const save = useCallback((newVal) => {
     if (!docId) return;
-    setData(newVal);
-    db.collection(collectionName).doc(docId).set({ value: newVal }, { merge: true });
+    if (typeof newVal === 'function') {
+      setData(prev => {
+        const resolved = newVal(prev);
+        db.collection(collectionName).doc(docId).set({ value: resolved }, { merge: true });
+        return resolved;
+      });
+    } else {
+      setData(newVal);
+      db.collection(collectionName).doc(docId).set({ value: newVal }, { merge: true });
+    }
   }, [collectionName, docId]);
 
   return [data, save, loaded];
@@ -1544,6 +1560,8 @@ function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Handle redirect result (for mobile sign-in)
+    auth.getRedirectResult().catch(() => {});
     const unsub = auth.onAuthStateChanged(u => {
       setUser(u);
       setLoading(false);
@@ -1551,7 +1569,13 @@ function useAuth() {
     return unsub;
   }, []);
 
-  const signIn = () => auth.signInWithPopup(googleProvider);
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const signIn = () => {
+    if (isMobile) {
+      return auth.signInWithRedirect(googleProvider);
+    }
+    return auth.signInWithPopup(googleProvider);
+  };
   const signOut = () => auth.signOut();
 
   return { user, loading, signIn, signOut };
