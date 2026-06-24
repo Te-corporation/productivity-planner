@@ -1402,12 +1402,96 @@
     .week-grid { overflow-x: auto; }
   }
 
-  @media (max-width: 600px) {
-    .app-header { padding: 14px 16px; flex-wrap: wrap; gap: 10px; }
-    .app-header h1 { font-size: 1.2rem; }
-    .main-content { padding: 16px; }
-    .pomo-card { padding: 32px 24px; }
-    .pomo-timer { font-size: 3.5rem; }
+  @media (max-width: 768px) {
+    .app-header {
+      padding: 12px 16px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .app-header h1 { font-size: 1.1rem; }
+    .header-date { display: none; }
+    .nav-tabs {
+      order: 3;
+      width: 100%;
+      justify-content: center;
+    }
+    .nav-tab {
+      padding: 6px 14px;
+      font-size: 0.78rem;
+    }
+    .main-content { padding: 12px; }
+    .quote-banner {
+      padding: 14px 16px;
+      margin-bottom: 16px;
+    }
+    .quote-text { font-size: 0.88rem; }
+    .quote-banner::after { display: none; }
+
+    /* Week view — scroll horizontally */
+    .week-grid {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .week-grid.view-week {
+      grid-template-columns: 50px repeat(7, 120px);
+      min-width: 0;
+    }
+    .week-header { flex-wrap: wrap; gap: 8px; }
+    .week-nav span { font-size: 0.9rem; min-width: 160px; }
+
+    /* Today view */
+    .today-view { max-width: 100%; padding: 0; }
+    .today-card {
+      padding: 14px 16px;
+      margin-bottom: 10px;
+    }
+
+    /* Roadmap */
+    .roadmap-container { padding: 16px 0; }
+    .milestone-card { padding: 16px; }
+
+    /* Ideas */
+    .ideas-board { grid-template-columns: 1fr !important; }
+
+    /* Pomodoro */
+    .pomo-card { padding: 28px 18px; }
+    .pomo-timer { font-size: 3rem; }
+    .pomo-mode-tabs { flex-wrap: wrap; }
+
+    /* Settings */
+    .settings-container { padding: 16px 0; }
+    .settings-card { padding: 20px 16px; }
+
+    /* GCal bar */
+    .gcal-signin-bar {
+      max-width: 100%;
+      padding: 6px 12px;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    /* Modals */
+    .modal-overlay .modal-content,
+    .block-modal {
+      width: 95vw !important;
+      max-width: 95vw !important;
+      margin: 10px;
+      padding: 20px 16px !important;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .app-header h1 { font-size: 0.95rem; }
+    .nav-tab {
+      padding: 5px 10px;
+      font-size: 0.72rem;
+    }
+    .main-content { padding: 8px; }
+    .week-grid.view-week {
+      grid-template-columns: 42px repeat(7, 100px);
+    }
+    .pomo-timer { font-size: 2.6rem; }
+    .pomo-card { padding: 24px 14px; }
   }
 </style>
 </head>
