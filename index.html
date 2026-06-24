@@ -2566,7 +2566,7 @@ function Settings() {
       if (v !== null) data[k] = JSON.parse(v);
     });
     data._exportDate = new Date().toISOString();
-    data._appName = 'My Productivity Planner';
+    data._appName = 'Shiba is coming';
 
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -2586,7 +2586,7 @@ function Settings() {
     reader.onload = (ev) => {
       try {
         const data = JSON.parse(ev.target.result);
-        if (!data._appName || data._appName !== 'My Productivity Planner') {
+        if (!data._appName || data._appName !== 'Shiba is coming') {
           setMessage({ type: 'error', text: 'This doesn\'t look like a planner backup file.' });
           setTimeout(() => setMessage(null), 5000);
           return;
@@ -2720,7 +2720,7 @@ function App() {
   return (
     <div>
       <header className="app-header">
-        <h1>My Productivity Planner</h1>
+        <h1>Shiba is coming</h1>
         <nav className="nav-tabs">
           <button className={`nav-tab ${tab === 'planner' ? 'active' : ''}`} onClick={() => setTab('planner')}>Week</button>
           <button className={`nav-tab ${tab === 'roadmap' ? 'active' : ''}`} onClick={() => setTab('roadmap')}>Roadmap</button>
