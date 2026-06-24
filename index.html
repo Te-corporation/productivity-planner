@@ -1261,6 +1261,289 @@
   .pomo-stat-label { color: var(--text-light); }
   .pomo-stat-value { font-weight: 700; color: var(--text); }
 
+  /* Shiba */
+  .shiba-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 8px;
+    position: relative;
+  }
+  .shiba-speech {
+    background: white;
+    border: 2px solid #eedcc8;
+    border-radius: 16px;
+    padding: 8px 16px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 8px;
+    position: relative;
+    animation: speechPop 0.3s ease;
+    max-width: 240px;
+    text-align: center;
+  }
+  .shiba-speech::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 8px solid #eedcc8;
+  }
+  @keyframes speechPop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  .shiba {
+    width: 100px;
+    height: 100px;
+    position: relative;
+    transition: transform 0.3s;
+  }
+  /* Body */
+  .shiba-body {
+    width: 60px;
+    height: 50px;
+    background: #f5c266;
+    border-radius: 30px 30px 24px 24px;
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .shiba-belly {
+    width: 36px;
+    height: 30px;
+    background: #fef0d0;
+    border-radius: 50%;
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  /* Head */
+  .shiba-head {
+    width: 52px;
+    height: 46px;
+    background: #f5c266;
+    border-radius: 50% 50% 40% 40%;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+  }
+  .shiba-face-white {
+    width: 34px;
+    height: 28px;
+    background: #fef0d0;
+    border-radius: 50%;
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  /* Eyes */
+  .shiba-eye {
+    width: 6px;
+    height: 7px;
+    background: #3d2e1f;
+    border-radius: 50%;
+    position: absolute;
+    top: 18px;
+  }
+  .shiba-eye.left { left: 14px; }
+  .shiba-eye.right { right: 14px; }
+  .shiba-eye-happy {
+    width: 8px;
+    height: 4px;
+    border-bottom: 2.5px solid #3d2e1f;
+    border-radius: 0 0 50% 50%;
+    position: absolute;
+    top: 18px;
+    background: transparent;
+  }
+  .shiba-eye-happy.left { left: 12px; }
+  .shiba-eye-happy.right { right: 12px; }
+  .shiba-eye-sleepy {
+    width: 8px;
+    height: 2px;
+    background: #3d2e1f;
+    border-radius: 2px;
+    position: absolute;
+    top: 20px;
+  }
+  .shiba-eye-sleepy.left { left: 13px; }
+  .shiba-eye-sleepy.right { right: 13px; }
+  /* Nose & mouth */
+  .shiba-nose {
+    width: 8px;
+    height: 5px;
+    background: #3d2e1f;
+    border-radius: 50% 50% 40% 40%;
+    position: absolute;
+    top: 26px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .shiba-mouth {
+    width: 12px;
+    height: 5px;
+    border-bottom: 2px solid #c4956a;
+    border-radius: 0 0 50% 50%;
+    position: absolute;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .shiba-tongue {
+    width: 6px;
+    height: 6px;
+    background: #f28b8b;
+    border-radius: 0 0 50% 50%;
+    position: absolute;
+    top: 33px;
+    left: 50%;
+    transform: translateX(-50%);
+    animation: tongueWag 0.6s infinite alternate;
+  }
+  @keyframes tongueWag {
+    0% { transform: translateX(-50%) rotate(-5deg); }
+    100% { transform: translateX(-50%) rotate(5deg); }
+  }
+  /* Ears */
+  .shiba-ear {
+    width: 16px;
+    height: 20px;
+    background: #f5c266;
+    position: absolute;
+    top: -6px;
+    z-index: 1;
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  }
+  .shiba-ear.left { left: 6px; transform: rotate(-15deg); }
+  .shiba-ear.right { right: 6px; transform: rotate(15deg); }
+  .shiba-ear-inner {
+    width: 10px;
+    height: 12px;
+    background: #f0a050;
+    position: absolute;
+    top: -2px;
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  }
+  .shiba-ear-inner.left { left: 9px; transform: rotate(-15deg); }
+  .shiba-ear-inner.right { right: 9px; transform: rotate(15deg); }
+  /* Tail */
+  .shiba-tail {
+    width: 12px;
+    height: 20px;
+    background: #f5c266;
+    border-radius: 6px 6px 0 0;
+    position: absolute;
+    bottom: 20px;
+    right: 12px;
+    transform-origin: bottom center;
+    transform: rotate(-20deg);
+    transition: transform 0.3s;
+  }
+  /* Paws */
+  .shiba-paw {
+    width: 14px;
+    height: 8px;
+    background: #fef0d0;
+    border-radius: 50%;
+    position: absolute;
+    bottom: -2px;
+  }
+  .shiba-paw.left { left: 26px; }
+  .shiba-paw.right { right: 26px; }
+  /* Blush */
+  .shiba-blush {
+    width: 8px;
+    height: 5px;
+    background: rgba(242, 139, 139, 0.4);
+    border-radius: 50%;
+    position: absolute;
+    top: 24px;
+  }
+  .shiba-blush.left { left: 8px; }
+  .shiba-blush.right { right: 8px; }
+
+  /* Animations */
+  .shiba.idle .shiba-body { animation: idleBob 2s ease-in-out infinite; }
+  @keyframes idleBob {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-2px); }
+  }
+
+  .shiba.working { animation: workBounce 0.6s ease-in-out infinite; }
+  @keyframes workBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  .shiba.working .shiba-tail { animation: tailWag 0.3s ease-in-out infinite alternate; }
+  @keyframes tailWag {
+    0% { transform: rotate(-35deg); }
+    100% { transform: rotate(10deg); }
+  }
+  .shiba.working .shiba-ear.left { animation: earWiggleL 0.8s ease-in-out infinite alternate; }
+  .shiba.working .shiba-ear.right { animation: earWiggleR 0.8s ease-in-out infinite alternate; }
+  @keyframes earWiggleL { 0% { transform: rotate(-15deg); } 100% { transform: rotate(-8deg); } }
+  @keyframes earWiggleR { 0% { transform: rotate(15deg); } 100% { transform: rotate(8deg); } }
+
+  .shiba.celebrating { animation: celebrateBounce 0.4s ease-in-out infinite; }
+  @keyframes celebrateBounce {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    25% { transform: translateY(-12px) rotate(-5deg); }
+    75% { transform: translateY(-12px) rotate(5deg); }
+  }
+  .shiba.celebrating .shiba-tail { animation: tailWag 0.15s ease-in-out infinite alternate; }
+
+  .shiba.resting .shiba-body { animation: restBreathe 3s ease-in-out infinite; }
+  @keyframes restBreathe {
+    0%, 100% { transform: translateX(-50%) scaleY(1); }
+    50% { transform: translateX(-50%) scaleY(1.03); }
+  }
+
+  /* Shiba level badge */
+  .shiba-level {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #f5c266, #e8720c);
+    color: white;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-top: 4px;
+  }
+  .shiba-xp-bar {
+    width: 80px;
+    height: 6px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .shiba-xp-fill {
+    height: 100%;
+    background: white;
+    border-radius: 3px;
+    transition: width 0.5s ease;
+  }
+  .shiba-streak {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.78rem;
+    color: var(--accent-primary);
+    font-weight: 700;
+    margin-top: 6px;
+  }
+
   /* Google Calendar */
   .gcal-signin-bar {
     background: var(--card);
@@ -2613,6 +2896,58 @@ function IdeasBoard({ ideas, setIdeas }) {
   );
 }
 
+function ShibaInu({ state }) {
+  // state: 'idle' | 'working' | 'celebrating' | 'resting'
+  const isHappy = state === 'working' || state === 'celebrating';
+  const isResting = state === 'resting';
+
+  return (
+    <div className={`shiba ${state}`}>
+      {/* Ears */}
+      <div className="shiba-ear left">
+        <div className="shiba-ear-inner left"></div>
+      </div>
+      <div className="shiba-ear right">
+        <div className="shiba-ear-inner right"></div>
+      </div>
+      {/* Head */}
+      <div className="shiba-head">
+        <div className="shiba-face-white"></div>
+        {/* Eyes */}
+        {isResting ? (
+          <React.Fragment>
+            <div className="shiba-eye-sleepy left"></div>
+            <div className="shiba-eye-sleepy right"></div>
+          </React.Fragment>
+        ) : isHappy ? (
+          <React.Fragment>
+            <div className="shiba-eye-happy left"></div>
+            <div className="shiba-eye-happy right"></div>
+          </React.Fragment>
+        ) : (
+          <React.Fragment>
+            <div className="shiba-eye left"></div>
+            <div className="shiba-eye right"></div>
+          </React.Fragment>
+        )}
+        {/* Blush when happy */}
+        {isHappy && <React.Fragment><div className="shiba-blush left"></div><div className="shiba-blush right"></div></React.Fragment>}
+        <div className="shiba-nose"></div>
+        <div className="shiba-mouth"></div>
+        {isHappy && <div className="shiba-tongue"></div>}
+      </div>
+      {/* Body */}
+      <div className="shiba-body">
+        <div className="shiba-belly"></div>
+        <div className="shiba-paw left"></div>
+        <div className="shiba-paw right"></div>
+      </div>
+      {/* Tail */}
+      <div className="shiba-tail"></div>
+    </div>
+  );
+}
+
 function PomodoroTimer() {
   const MODES = { work: 25 * 60, shortBreak: 5 * 60, longBreak: 15 * 60 };
   const [mode, setMode] = useState('work');
@@ -2620,16 +2955,88 @@ function PomodoroTimer() {
   const [isRunning, setIsRunning] = useState(false);
   const [sessions, setSessions] = useState(() => loadData('pomo-sessions-today', 0));
   const [totalToday, setTotalToday] = useState(() => loadData('pomo-total-today', 0));
+  const [justCompleted, setJustCompleted] = useState(false);
+  const [allTimeSessions, setAllTimeSessions] = useState(() => loadData('pomo-all-time', 0));
   const intervalRef = useRef(null);
-  const audioRef = useRef(null);
+
+  // Shiba speech bubbles
+  const SHIBA_IDLE = [
+    "Let's get to work!",
+    "Ready when you are!",
+    "Focus time?",
+    "I believe in you!",
+    "You've got this!",
+    "Let's learn Flutter!",
+    "Time to code?",
+  ];
+  const SHIBA_WORKING = [
+    "You're doing great!",
+    "Keep going!",
+    "So proud of you!",
+    "Focus, focus!",
+    "Almost there!",
+    "You're amazing!",
+    "Shiba believes in you!",
+    "Stay strong!",
+    "Great concentration!",
+  ];
+  const SHIBA_DONE = [
+    "Woof woof! Great job!",
+    "You did it!!! ",
+    "Session complete!",
+    "Treat time? You earned it!",
+    "Shiba is SO proud!",
+    "Amazing work!",
+  ];
+  const SHIBA_BREAK = [
+    "Rest well...",
+    "Take it easy...",
+    "Zzz... good break...",
+    "Recharge time...",
+    "Stretch a little!",
+    "Drink some water!",
+  ];
+
+  const [speech, setSpeech] = useState(() => SHIBA_IDLE[Math.floor(Math.random() * SHIBA_IDLE.length)]);
+
+  // Level system: 5 XP per session, level up every 25 XP (5 sessions)
+  const xpPerSession = 5;
+  const xpPerLevel = 25;
+  const totalXp = allTimeSessions * xpPerSession;
+  const level = Math.floor(totalXp / xpPerLevel) + 1;
+  const currentLevelXp = totalXp % xpPerLevel;
+  const xpPercent = (currentLevelXp / xpPerLevel) * 100;
+
+  const LEVEL_TITLES = [
+    'Tiny Pup', 'Curious Pup', 'Eager Learner', 'Good Boy',
+    'Smart Shiba', 'Focus Master', 'Code Doge', 'Flutter Shiba',
+    'Sensei Shiba', 'Legendary Doge', 'Ultra Shiba', 'Galaxy Brain Doge',
+  ];
+  const levelTitle = LEVEL_TITLES[Math.min(level - 1, LEVEL_TITLES.length - 1)];
 
   useEffect(() => {
     saveData('pomo-sessions-today', sessions);
     saveData('pomo-total-today', totalToday);
-  }, [sessions, totalToday]);
+    saveData('pomo-all-time', allTimeSessions);
+  }, [sessions, totalToday, allTimeSessions]);
+
+  // Rotate speech every 15 seconds while working
+  useEffect(() => {
+    if (isRunning && mode === 'work') {
+      const interval = setInterval(() => {
+        setSpeech(SHIBA_WORKING[Math.floor(Math.random() * SHIBA_WORKING.length)]);
+      }, 15000);
+      return () => clearInterval(interval);
+    }
+  }, [isRunning, mode]);
 
   useEffect(() => {
     if (isRunning) {
+      setSpeech(mode === 'work'
+        ? SHIBA_WORKING[Math.floor(Math.random() * SHIBA_WORKING.length)]
+        : SHIBA_BREAK[Math.floor(Math.random() * SHIBA_BREAK.length)]
+      );
+
       intervalRef.current = setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1) {
@@ -2638,13 +3045,25 @@ function PomodoroTimer() {
             if (mode === 'work') {
               setSessions(s => s + 1);
               setTotalToday(t => t + MODES.work);
+              setAllTimeSessions(a => a + 1);
+              setSpeech(SHIBA_DONE[Math.floor(Math.random() * SHIBA_DONE.length)]);
+              setJustCompleted(true);
+              setTimeout(() => setJustCompleted(false), 4000);
               try { new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH2Kj4+MiYOAeHRwbm1ub3J1eHx/goWHiYqLi4uKiYeFgn56dnNwbm1sbG1ub3J0d3p9gIOGiImKi4uLioqIhoSBfnp3dHFvbWxsbW5vcXR3en2Ag4aIiouLi4uKioiGhIF+e3h1cm9tbGxtbm9ydHd6fYCDhoiKi4uLi4qKiIaEgX57eHVyb21sbG1ub3F0d3p9gIOGiIqLi4uLioqIhoSBfnt4dXJvbWxsbW5vcXR3en2Ag4WIiouLi4uKioiGhIF+e3h1cm9tbGxtbm9xdHd6fYCDhoiKi4uLi4qKiIaEgX57eHVyb21sbG1ub3F0d3p9gIOGiIqLi4uLioqIhoQ=').play(); } catch {}
+            } else {
+              setSpeech(SHIBA_IDLE[Math.floor(Math.random() * SHIBA_IDLE.length)]);
             }
             return 0;
           }
           return prev - 1;
         });
       }, 1000);
+    } else if (!justCompleted) {
+      if (mode !== 'work') {
+        setSpeech(SHIBA_BREAK[Math.floor(Math.random() * SHIBA_BREAK.length)]);
+      } else if (!justCompleted) {
+        setSpeech(SHIBA_IDLE[Math.floor(Math.random() * SHIBA_IDLE.length)]);
+      }
     }
     return () => clearInterval(intervalRef.current);
   }, [isRunning, mode]);
@@ -2654,6 +3073,7 @@ function PomodoroTimer() {
     clearInterval(intervalRef.current);
     setMode(newMode);
     setTimeLeft(MODES[newMode]);
+    setJustCompleted(false);
   };
 
   const toggleTimer = () => {
@@ -2661,12 +3081,14 @@ function PomodoroTimer() {
       setTimeLeft(MODES[mode]);
     }
     setIsRunning(!isRunning);
+    setJustCompleted(false);
   };
 
   const resetTimer = () => {
     setIsRunning(false);
     clearInterval(intervalRef.current);
     setTimeLeft(MODES[mode]);
+    setJustCompleted(false);
   };
 
   const formatTime = (secs) => {
@@ -2676,6 +3098,12 @@ function PomodoroTimer() {
   };
 
   const modeLabels = { work: 'Focus Time', shortBreak: 'Short Break', longBreak: 'Long Break' };
+
+  // Determine Shiba state
+  let shibaState = 'idle';
+  if (justCompleted) shibaState = 'celebrating';
+  else if (isRunning && mode === 'work') shibaState = 'working';
+  else if (isRunning || mode !== 'work') shibaState = 'resting';
 
   return (
     <div className="pomodoro-container">
@@ -2691,6 +3119,24 @@ function PomodoroTimer() {
             </button>
           ))}
         </div>
+
+        {/* Shiba */}
+        <div className="shiba-zone">
+          <div className="shiba-speech">{speech}</div>
+          <ShibaInu state={shibaState} />
+          <div className="shiba-level">
+            <span>Lv.{level} {levelTitle}</span>
+            <div className="shiba-xp-bar">
+              <div className="shiba-xp-fill" style={{ width: `${xpPercent}%` }}></div>
+            </div>
+          </div>
+          {sessions > 0 && (
+            <div className="shiba-streak">
+              {sessions} session{sessions !== 1 ? 's' : ''} today
+            </div>
+          )}
+        </div>
+
         <div className="pomo-timer">{formatTime(timeLeft)}</div>
         <div className="pomo-label">{modeLabels[mode]}</div>
         <div className="pomo-controls">
@@ -2719,6 +3165,14 @@ function PomodoroTimer() {
         <div className="pomo-stat-row">
           <span className="pomo-stat-label">Until long break</span>
           <span className="pomo-stat-value">{4 - (sessions % 4)} sessions</span>
+        </div>
+        <div className="pomo-stat-row">
+          <span className="pomo-stat-label">All-time sessions</span>
+          <span className="pomo-stat-value">{allTimeSessions}</span>
+        </div>
+        <div className="pomo-stat-row">
+          <span className="pomo-stat-label">Shiba level</span>
+          <span className="pomo-stat-value">Lv.{level} — {levelTitle}</span>
         </div>
       </div>
     </div>
