@@ -1229,6 +1229,12 @@
     line-height: 1.4;
   }
 
+  .gcal-event.gcal-task {
+    background: rgba(52, 168, 83, 0.1);
+    border-left-color: #34a853;
+    color: #1e7e34;
+  }
+
   .gcal-event-time {
     font-weight: 400;
     opacity: 0.7;
@@ -1476,7 +1482,10 @@ function isToday(date) {
 }
 
 function dateKey(date) {
-  return date.toISOString().split('T')[0];
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }
 
 function getRandomQuote() {
@@ -1503,30 +1512,39 @@ function useGoogleCalendar() {
   const [signedIn, setSignedIn] = useState(false);
   const [events, setEvents] = useState({});
   const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState('');
   const tokenClientRef = useRef(null);
   const accessTokenRef = useRef(null);
 
   const initGapi = useCallback(() => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       if (window.gapi && window.gapi.client) { resolve(); return; }
       const check = setInterval(() => {
         if (window.gapi) {
           clearInterval(check);
           window.gapi.load('client', async () => {
-            await window.gapi.client.init({});
-            await window.gapi.client.load('https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest');
-            resolve();
+            try {
+              await window.gapi.client.init({});
+              await window.gapi.client.load('https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest');
+              await window.gapi.client.load('https://www.googleapis.com/discovery/v1/apis/tasks/v1/rest');
+              resolve();
+            } catch (err) {
+              reject(err);
+            }
           });
         }
       }, 100);
-      setTimeout(() => clearInterval(check), 10000);
+      setTimeout(() => { clearInterval(check); reject('Timeout loading Google API'); }, 10000);
     });
   }, []);
 
   const fetchEvents = useCallback(async (startDate, endDate) => {
     if (!accessTokenRef.current) return;
     setLoading(true);
+    setStatus('Loading events...');
+    const grouped = {};
     try {
+      // Fetch calendar events
       const response = await window.gapi.client.calendar.events.list({
         calendarId: 'primary',
         timeMin: startDate.toISOString(),
@@ -1536,33 +1554,74 @@ function useGoogleCalendar() {
         maxResults: 100,
       });
       const items = response.result.items || [];
-      const grouped = {};
       items.forEach(ev => {
         const start = ev.start.dateTime || ev.start.date;
         const dk = start.split('T')[0];
         if (!grouped[dk]) grouped[dk] = [];
         const startTime = ev.start.dateTime ? new Date(ev.start.dateTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : 'All day';
         const endTime = ev.end.dateTime ? new Date(ev.end.dateTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '';
-        grouped[dk].push({ id: ev.id, title: ev.summary || '(No title)', startTime, endTime, allDay: !ev.start.dateTime });
+        grouped[dk].push({ id: ev.id, title: ev.summary || '(No title)', startTime, endTime, allDay: !ev.start.dateTime, type: 'event' });
       });
-      setEvents(grouped);
+      setStatus(`Found ${items.length} event${items.length !== 1 ? 's' : ''}`);
     } catch (err) {
       console.error('Calendar fetch error:', err);
+      setStatus('Error loading events');
     }
+
+    // Fetch Google Tasks
+    try {
+      const taskLists = await window.gapi.client.tasks.tasklists.list({ maxResults: 10 });
+      const lists = taskLists.result.items || [];
+      let taskCount = 0;
+      for (const list of lists) {
+        try {
+          const tasksResp = await window.gapi.client.tasks.tasks.list({
+            tasklist: list.id,
+            dueMin: startDate.toISOString(),
+            dueMax: endDate.toISOString(),
+            showCompleted: false,
+            maxResults: 50,
+          });
+          const tasks = tasksResp.result.items || [];
+          tasks.forEach(t => {
+            if (t.due) {
+              const dk = t.due.split('T')[0];
+              if (!grouped[dk]) grouped[dk] = [];
+              grouped[dk].push({ id: t.id, title: t.title || '(No title)', startTime: 'Task', endTime: '', allDay: true, type: 'task' });
+              taskCount++;
+            }
+          });
+        } catch (e) { /* skip inaccessible lists */ }
+      }
+      setStatus(prev => prev + `, ${taskCount} task${taskCount !== 1 ? 's' : ''}`);
+    } catch (err) {
+      console.error('Tasks fetch error:', err);
+    }
+
+    setEvents(grouped);
     setLoading(false);
   }, []);
 
   const signIn = useCallback(async () => {
-    await initGapi();
+    setStatus('Connecting...');
+    try {
+      await initGapi();
+    } catch (err) {
+      setStatus('Failed to load Google API');
+      return;
+    }
     if (!tokenClientRef.current && window.google) {
       tokenClientRef.current = window.google.accounts.oauth2.initTokenClient({
         client_id: GCAL_CLIENT_ID,
-        scope: GCAL_SCOPES,
+        scope: GCAL_SCOPES + ' https://www.googleapis.com/auth/tasks.readonly',
         callback: (tokenResponse) => {
           if (tokenResponse.access_token) {
             accessTokenRef.current = tokenResponse.access_token;
             window.gapi.client.setToken({ access_token: tokenResponse.access_token });
             setSignedIn(true);
+            setStatus('Connected!');
+          } else {
+            setStatus('Sign-in failed');
           }
         },
       });
@@ -1578,9 +1637,10 @@ function useGoogleCalendar() {
     window.gapi?.client?.setToken(null);
     setSignedIn(false);
     setEvents({});
+    setStatus('');
   }, []);
 
-  return { signedIn, events, loading, signIn, signOut, fetchEvents };
+  return { signedIn, events, loading, status, signIn, signOut, fetchEvents };
 }
 
 // ===== COMPONENTS =====
@@ -1847,8 +1907,8 @@ function WeeklyPlanner({ gcal }) {
               return (
                 <div key={`gcal-${i}`} className="gcal-events-strip">
                   {dayEvents.map(ev => (
-                    <div key={ev.id} className="gcal-event" title={`${ev.title} (${ev.allDay ? 'All day' : ev.startTime})`}>
-                      <span className="gcal-event-time">{ev.allDay ? '◆' : ev.startTime}</span> {ev.title}
+                    <div key={ev.id} className={`gcal-event ${ev.type === 'task' ? 'gcal-task' : ''}`} title={`${ev.title} (${ev.allDay ? 'All day' : ev.startTime})`}>
+                      <span className="gcal-event-time">{ev.type === 'task' ? '☑' : ev.allDay ? '◆' : ev.startTime}</span> {ev.title}
                     </div>
                   ))}
                 </div>
@@ -2388,14 +2448,17 @@ function GCalBar({ gcal }) {
   if (gcal.signedIn) {
     return (
       <div className="gcal-signin-bar">
-        <span>Google Calendar connected</span>
+        <span>Google Calendar connected {gcal.status && <span style={{ color: '#27ae60', fontSize: '0.8rem' }}>— {gcal.status}</span>}</span>
         <button className="gcal-signout-btn" onClick={gcal.signOut}>Disconnect</button>
       </div>
     );
   }
   return (
     <div className="gcal-signin-bar">
-      <span>Connect Google Calendar to see your events</span>
+      <span>
+        Connect Google Calendar to see your events
+        {gcal.status && <span style={{ color: 'var(--accent-primary)', fontSize: '0.8rem', marginLeft: 8 }}>{gcal.status}</span>}
+      </span>
       <button className="gcal-signin-btn" onClick={gcal.signIn}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
         Connect
